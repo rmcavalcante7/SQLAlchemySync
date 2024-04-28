@@ -1,0 +1,59 @@
+# def pytest_collection_modifyitems(items):
+#     """Modifies test items in place to ensure test classes run in a given order."""
+#     CLASS_ORDER = ["test_aditivo_nutritivo"
+#                    , "test_conservante"
+#                    , "test_ingrediente"
+#                    , "test_revendedor"
+#                    , "test_tipo_picole"
+#                    , "test_tipo_embalagem"
+#                    , "test_sabor"
+#                    , "test_lote"
+#                    , "test_nota_fiscal"
+#                    , "test_picole"
+#                    ]
+#     class_mapping = {item: item.cls.__name__ for item in items}
+#
+#     sorted_items = items.copy()
+#     # Iteratively move tests of each class to the end of the test queue
+#     for class_ in CLASS_ORDER:
+#         sorted_items = [it for it in sorted_items if class_mapping[it] != class_] + [
+#             it for it in sorted_items if class_mapping[it] == class_
+#         ]
+#     items[:] = sorted_items
+from typing import List
+
+
+def pytest_collection_modifyitems(session, config, items):
+    """Modifies test items in place to ensure test functions run in a given order"""
+    # function_order: list[str] = [
+    #     "test_aditivo_nutritivo"
+    #     , "test_conservante"
+    #     , "test_ingrediente"
+    #     , "test_revendedor"
+    #     , "test_tipo_picole"
+    #     , "test_tipo_embalagem"
+    #     , "test_sabor"
+    #     , "test_lote"
+    #     , "test_nota_fiscal"
+    #     , "test_picole"
+    # ]
+    function_order: list[str] = [
+          "test_picole"
+        , "test_lote"
+        , "test_aditivo_nutritivo_picole"
+        , "test_conservante_picole"
+        , "test_ingrediente_picole"
+        , "test_lote_nota_fiscal"
+    ]
+    # OR
+    # function_order = ["test_one[1]", "test_two[2]"]
+    function_mapping = {item: item.name.split("[")[0]
+                        if "]" not in function_order[0]
+                        else item.name
+                        for item in items}
+
+    sorted_items = items.copy()
+    for func_ in function_order:
+        sorted_items = [it for it in sorted_items if function_mapping[it] != func_] + [it for it in sorted_items if
+                                                                                       function_mapping[it] == func_]
+    items[:] = sorted_items
