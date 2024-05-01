@@ -1,5 +1,5 @@
 import pytest
-from models.conservante_picole import ConservantePicole, insertConservantePicole
+from models.conservante_picole import ConservantePicole
 
 picole_fk = 1
 conservante_fk = 1
@@ -16,14 +16,14 @@ def test_instanciar_conservante_picole():
 
 # Teste de inserção bem-sucedida
 def test_inserir_conservante_picole():
-    conservante_picole = insertConservantePicole(picole_fk=picole_fk, conservante_fk=conservante_fk)
+    conservante_picole = ConservantePicole.insertConservantePicole(picole_fk=picole_fk, conservante_fk=conservante_fk)
     assert conservante_picole.picole_fk == picole_fk and conservante_picole.conservante_fk == conservante_fk
 
 
 # Teste de erro de integridade ao tentar inserir o mesmo registro duas vezes
 def test_erro_integridade_mesma_combinacao():
     with pytest.raises(RuntimeError) as exc_info:
-        insertConservantePicole(picole_fk=picole_fk, conservante_fk=conservante_fk)
+        ConservantePicole.insertConservantePicole(picole_fk=picole_fk, conservante_fk=conservante_fk)
     assert 'Já existe um ConservantePicole com a mesma combinação de picole_fk e conservante_fk' in str(exc_info.value)
 
 
@@ -32,7 +32,7 @@ def test_erro_integridade_chaves_estrangeiras():
     picole_fk_fake = 999
     conservante_fk_fake = 999
     with pytest.raises(RuntimeError) as exc_info:
-        insertConservantePicole(picole_fk=picole_fk_fake, conservante_fk=conservante_fk_fake)
+        ConservantePicole.insertConservantePicole(picole_fk=picole_fk_fake, conservante_fk=conservante_fk_fake)
     assert 'Erro de integridade ao inserir ConservantePicole. Verifique se as FKs fornecidas existem' in str(
         exc_info.value)
 
@@ -40,10 +40,10 @@ def test_erro_integridade_chaves_estrangeiras():
 # Teste de erro ao inserir tipos de dados incorretos
 def test_tipo_dados_incorretos():
     with pytest.raises(TypeError) as exc_info1:
-        insertConservantePicole(picole_fk='abc', conservante_fk=conservante_fk)
+        ConservantePicole.insertConservantePicole(picole_fk='abc', conservante_fk=conservante_fk)
 
     with pytest.raises(TypeError) as exc_info2:
-        insertConservantePicole(picole_fk=picole_fk, conservante_fk='asdf')
+        ConservantePicole.insertConservantePicole(picole_fk=picole_fk, conservante_fk='asdf')
 
     assert 'picole_fk do ConservantePicole deve ser um inteiro!' in str(exc_info1.value)
     assert 'conservante_fk do ConservantePicole deve ser um inteiro!' in str(exc_info2.value)
@@ -52,7 +52,7 @@ def test_tipo_dados_incorretos():
 # teste inserir combinação de picole_fk e conservante_fk que já existe
 def test_inserir_conservante_picole_combinacao_existente():
     with pytest.raises(RuntimeError) as exc_info:
-        insertConservantePicole(picole_fk=1, conservante_fk=1)
+        ConservantePicole.insertConservantePicole(picole_fk=1, conservante_fk=1)
     assert (f"Já existe um ConservantePicole com a mesma combinação de picole_fk e conservante_fk: {picole_fk=} | "
             f"{conservante_fk=}") in str(exc_info.value)
 

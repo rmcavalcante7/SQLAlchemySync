@@ -30,133 +30,136 @@ class Lote(ModelBase):
         return f'<Lote (picole_fk={self.tipo_picole_fk}, quantidade={self.quantidade})>'
 
 
-def insertLote(picole_fk: int, quantidade: int) -> Lote or None:
-    """Insere um Lote na tabela lote
-    :param picole_fk: int: id do picolé
-    :param quantidade: int: quantidade de picolés do lote
-    :return: Lote or None: Retorna o objeto Lote se inserido com sucesso, None caso contrário
-    :raises TypeError: Se o nome ou não for strings
-    :raises RuntimeError: Se ocorrer um erro de integridade ao inserir o lote, especificado para o tipo_picole_fk. Caso
-    seja por outro motivo, será lançado um erro genérico.
-    """
+    @staticmethod
+    def insertLote(picole_fk: int, quantidade: int) -> 'Lote' or None:
+        """Insere um Lote na tabela lote
+        :param picole_fk: int: id do picolé
+        :param quantidade: int: quantidade de picolés do lote
+        :return: Lote or None: Retorna o objeto Lote se inserido com sucesso, None caso contrário
+        :raises TypeError: Se o nome ou não for strings
+        :raises RuntimeError: Se ocorrer um erro de integridade ao inserir o lote, especificado para o tipo_picole_fk. Caso
+        seja por outro motivo, será lançado um erro genérico.
+        """
 
-    try:
-        # check if is string
-        if not isinstance(picole_fk, int):
-            raise TypeError('picole_fk deve ser um inteiro!')
+        try:
+            # check if is string
+            if not isinstance(picole_fk, int):
+                raise TypeError('picole_fk deve ser um inteiro!')
 
-        if not isinstance(quantidade, int):
-            raise TypeError('quantidade deve ser um inteiro!')
+            if not isinstance(quantidade, int):
+                raise TypeError('quantidade deve ser um inteiro!')
 
-        # validar se os parâmetros informados são válidos
-        if quantidade <= 0:
-            raise ValueError('quantidade de picolés do Lote deve ser maior que zero!')
+            # validar se os parâmetros informados são válidos
+            if quantidade <= 0:
+                raise ValueError('quantidade de picolés do Lote deve ser maior que zero!')
 
-        lote = Lote(picole_fk=picole_fk, quantidade=quantidade)
+            lote = Lote(picole_fk=picole_fk, quantidade=quantidade)
 
-        with createSession() as session:
-            print(f'Inserindo lote: {lote}')
-            session.add(lote)
-            session.commit()
+            with createSession() as session:
+                print(f'Inserindo lote: {lote}')
+                session.add(lote)
+                session.commit()
 
-            print(f'Lote inserido com sucesso!')
-            print(f'ID do Lote inserido: {lote.id}')
-            print(f'Nome do Tipo de picolé do Lote inserido: {lote.tipo_picole}')
-            print(f'Quantidade de picolé do Lote inserido: {lote.quantidade}')
-            return lote
+                print(f'Lote inserido com sucesso!')
+                print(f'ID do Lote inserido: {lote.id}')
+                print(f'Nome do Tipo de picolé do Lote inserido: {lote.tipo_picole}')
+                print(f'Quantidade de picolé do Lote inserido: {lote.quantidade}')
+                return lote
 
-    except IntegrityError as intg_error:
-        if 'FOREIGN KEY constraint failed' in str(intg_error):
-            raise RuntimeError(f"Erro de integridade ao inserir Lote: {picole_fk=} "
-                               f"não encontrado!")
-        else:
-            raise RuntimeError(f'Erro de integridade ao inserir Lote: {intg_error}')
+        except IntegrityError as intg_error:
+            if 'FOREIGN KEY constraint failed' in str(intg_error):
+                raise RuntimeError(f"Erro de integridade ao inserir Lote: {picole_fk=} "
+                                   f"não encontrado!")
+            else:
+                raise RuntimeError(f'Erro de integridade ao inserir Lote: {intg_error}')
 
-    except TypeError as te:
-        raise TypeError(te)
+        except TypeError as te:
+            raise TypeError(te)
 
-    except ValueError as ve:
-        raise ValueError(ve)
+        except ValueError as ve:
+            raise ValueError(ve)
 
-    except Exception as exc:
-        print(f'Erro inesperado: {exc}')
+        except Exception as exc:
+            print(f'Erro inesperado: {exc}')
 
+    @staticmethod
+    def selectAllLotes() -> list['Lote'] or []:
+        """Seleciona todos os Lotes na tabela lote
+        :raises Exception: Informa erro inesperado ao selecionar Lotes
+        :return: list[Lote] or []: Retorna uma lista de objetos Lote se encontrado, [] caso contrário
+        """
+        try:
+            with createSession() as session:
+                lotes = session.query(Lote).all()
+                return lotes
 
-def selectAllLotes() -> list[Lote] or []:
-    """Seleciona todos os Lotes na tabela lote
-    :raises Exception: Informa erro inesperado ao selecionar Lotes
-    :return: list[Lote] or []: Retorna uma lista de objetos Lote se encontrado, [] caso contrário
-    """
-    try:
-        with createSession() as session:
-            lotes = session.query(Lote).all()
-            return lotes
-
-    except Exception as exc:
-        raise Exception(f'Erro inesperado ao selecionar todos Lote: {exc}')
-
-
-def selectLotePorId(id: int) -> Lote or None:
-    """Seleciona um Lote na tabela lote por id
-    :param id: int: id do lote
-    :raises TypeError: Se o id não for um inteiro
-    :raises ValueError: Se o id não for informado
-    :return: Lote or None: Retorna o objeto Lote se encontrado, None caso contrário
-    """
-    try:
-
-        if not isinstance(id, int):
-            raise TypeError('id do Lote deve ser um inteiro!')
-
-        # validar se os parâmetros informados são válidos
-        if not id:
-            raise ValueError('id do Lote não informado!')
-
-        with createSession() as session:
-            lote = session.query(Lote).filter(Lote.id == id).one_or_none()
-            return lote
-
-    except TypeError as te:
-        raise TypeError(te)
-
-    except ValueError as ve:
-        raise ValueError(ve)
-
-    except Exception as e:
-        print(f'Erro ao selecionar Lote: {e}')
+        except Exception as exc:
+            raise Exception(f'Erro inesperado ao selecionar todos Lote: {exc}')
 
 
-def selectLotesPorPicoleFk(picole_fk: int) -> list[Lote] or []:
-    """Seleciona um Lote na tabela lote por picole_fk
-    :param picole_fk: int: id do picolé
-    :raises TypeError: Se o picole_fk não for um inteiro
-    :raises ValueError: Se o picole_fk não for informado
-    :return: list[Lote] or []: Retorna uma lista de objetos Lote se encontrado, [] caso contrário
-    """
-    try:
-        if not isinstance(picole_fk, int):
-            raise TypeError('picole_fk do Lote deve ser um inteiro!')
+    @staticmethod
+    def selectLotePorId(id: int) -> 'Lote' or None:
+        """Seleciona um Lote na tabela lote por id
+        :param id: int: id do lote
+        :raises TypeError: Se o id não for um inteiro
+        :raises ValueError: Se o id não for informado
+        :return: Lote or None: Retorna o objeto Lote se encontrado, None caso contrário
+        """
+        try:
 
-        # validar se os parâmetros informados são válidos
-        if not picole_fk:
-            raise ValueError('picole_fk do Lote não informado!')
+            if not isinstance(id, int):
+                raise TypeError('id do Lote deve ser um inteiro!')
 
-        with createSession() as session:
-            lotes = session.query(Lote).filter(Lote.picole_fk == picole_fk).all()
-            return lotes
+            # validar se os parâmetros informados são válidos
+            if not id:
+                raise ValueError('id do Lote não informado!')
 
-    except TypeError as te:
-        raise TypeError(te)
+            with createSession() as session:
+                lote = session.query(Lote).filter(Lote.id == id).one_or_none()
+                return lote
 
-    except ValueError as ve:
-        raise ValueError(ve)
+        except TypeError as te:
+            raise TypeError(te)
 
-    except Exception as exc:
-        print(f'Erro ao selecionar Lote: {exc}')
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except Exception as e:
+            print(f'Erro ao selecionar Lote: {e}')
+
+
+    @staticmethod
+    def selectLotesPorPicoleFk(picole_fk: int) -> list['Lote'] or []:
+        """Seleciona um Lote na tabela lote por picole_fk
+        :param picole_fk: int: id do picolé
+        :raises TypeError: Se o picole_fk não for um inteiro
+        :raises ValueError: Se o picole_fk não for informado
+        :return: list[Lote] or []: Retorna uma lista de objetos Lote se encontrado, [] caso contrário
+        """
+        try:
+            if not isinstance(picole_fk, int):
+                raise TypeError('picole_fk do Lote deve ser um inteiro!')
+
+            # validar se os parâmetros informados são válidos
+            if not picole_fk:
+                raise ValueError('picole_fk do Lote não informado!')
+
+            with createSession() as session:
+                lotes = session.query(Lote).filter(Lote.picole_fk == picole_fk).all()
+                return lotes
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except Exception as exc:
+            print(f'Erro ao selecionar Lote: {exc}')
 
 
 if __name__ == '__main__':
     try:
-        insertLote(picole_fk=1, quantidade=10)
+        Lote.insertLote(picole_fk=1, quantidade=10)
     except Exception as e:
         print(f'Erro ao inserir Lote: {e}')

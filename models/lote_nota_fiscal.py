@@ -40,171 +40,172 @@ class LoteNotaFiscal(ModelBase):
         return f'LoteNotaFiscal(id={self.id}, lote_fk={self.lote_fk}, nota_fiscal_fk={self.nota_fiscal_fk})'
 
 
-def insertLoteNotaFiscal(nota_fiscal_fk: int, lote_fk: int) -> LoteNotaFiscal or None:
-    """Insere um LoteNotaFiscal na tabela lote_nota_fiscal
-    :param nota_fiscal_fk: int: id da nota fiscal
-    :param lote_fk: int: id do lote
-    :return: LoteNotaFiscal or None: Retorna o objeto LoteNotaFiscal se inserido com sucesso, None caso contrário
-    :raises TypeError: Se o nome ou a fórmula química não forem strings
-    :raises ValueError: Se o nome ou a fórmula química não forem informados
-    :raises RuntimeError: Se as FKs nota_fiscal_fk e lote_fk não existirem retorna um erro de integridade, caso
-    contrário, retorna um erro genérico.
-    """
+    @staticmethod
+    def insertLoteNotaFiscal(nota_fiscal_fk: int, lote_fk: int) -> 'LoteNotaFiscal' or None:
+        """Insere um LoteNotaFiscal na tabela lote_nota_fiscal
+        :param nota_fiscal_fk: int: id da nota fiscal
+        :param lote_fk: int: id do lote
+        :return: LoteNotaFiscal or None: Retorna o objeto LoteNotaFiscal se inserido com sucesso, None caso contrário
+        :raises TypeError: Se o nome ou a fórmula química não forem strings
+        :raises ValueError: Se o nome ou a fórmula química não forem informados
+        :raises RuntimeError: Se as FKs nota_fiscal_fk e lote_fk não existirem retorna um erro de integridade, caso
+        contrário, retorna um erro genérico.
+        """
 
-    try:
-        # check if is string
-        if not isinstance(nota_fiscal_fk, int):
-            raise TypeError('nota_fiscal_fk do LoteNotaFiscal deve ser um inteiro!')
-        if not isinstance(lote_fk, int):
-            raise TypeError('lote_fk do LoteNotaFiscal deve ser um inteiro!')
+        try:
+            # check if is string
+            if not isinstance(nota_fiscal_fk, int):
+                raise TypeError('nota_fiscal_fk do LoteNotaFiscal deve ser um inteiro!')
+            if not isinstance(lote_fk, int):
+                raise TypeError('lote_fk do LoteNotaFiscal deve ser um inteiro!')
 
-        lote_nota_fiscal = LoteNotaFiscal(nota_fiscal_fk=nota_fiscal_fk,
-                                          lote_fk=lote_fk,
-                                          lote_nota_fiscal=f'{lote_fk}-{nota_fiscal_fk}'
-                                          )
-        # Verificar se já existe um registro com o nome e a fórmula informados
-        with createSession() as session:
-            print(f'Inserindo LoteNotaFiscal: {lote_nota_fiscal}')
-            session.add(lote_nota_fiscal)
-            session.commit()
+            lote_nota_fiscal = LoteNotaFiscal(nota_fiscal_fk=nota_fiscal_fk,
+                                              lote_fk=lote_fk,
+                                              lote_nota_fiscal=f'{lote_fk}-{nota_fiscal_fk}'
+                                              )
+            # Verificar se já existe um registro com o nome e a fórmula informados
+            with createSession() as session:
+                print(f'Inserindo LoteNotaFiscal: {lote_nota_fiscal}')
+                session.add(lote_nota_fiscal)
+                session.commit()
 
-            print(f'Lote Nota Fiscal inserido com sucesso!')
-            print(f'ID do LoteNotaFiscal inserido: {lote_nota_fiscal.id}')
-            print(f'nota_fiscal_fk do LoteNotaFiscal inserido: {lote_nota_fiscal.nota_fiscal_fk}')
-            print(f'nota_fiscal.numero_serie LoteNotaFiscal inserido: {str(lote_nota_fiscal.nota_fiscal.numero_serie)}')
-            print(f'lote_fk do LoteNotaFiscal inserido: {lote_nota_fiscal.lote_fk}')
-            print(f'lote.quantidade do LoteNotaFiscal inserido: {lote_nota_fiscal.lote.quantidade}')
-        return lote_nota_fiscal
-
-    except IntegrityError as intg_error:
-        if 'FOREIGN KEY constraint failed' in str(intg_error):
-            raise RuntimeError(f"""Erro de integridade ao inserir LoteNotaFiscal. 
-            Verifique se as FKs fornecidas existem: {nota_fiscal_fk=} | {lote_fk=}"""
-                               )
-        elif 'UNIQUE constraint failed' in str(intg_error):
-            raise RuntimeError(f"""Erro de integridade ao inserir LoteNotaFiscal. 
-            Já existe um LoteNotaFiscal com a mesma combinação de lote e nota fiscal: {nota_fiscal_fk=} | {lote_fk=}"""
-                               )
-
-        else:
-            raise RuntimeError(f'Erro de integridade ao inserir Lote: {intg_error}')
-
-    except TypeError as te:
-        raise TypeError(te)
-
-    except ValueError as ve:
-        raise ValueError(ve)
-
-    except Exception as exc:
-        print(f'Erro inesperado: {exc}')
-
-
-def selectAllLoteNotaFiscal() -> list[LoteNotaFiscal] or []:
-    """Seleciona todos os registros da tabela lote_nota_fiscal
-    :raises Exception: Informando erro inesperado ao selecionar os LoteNotaFiscal
-    :return: list[LoteNotaFiscal] or []: Retorna uma lista de objetos LoteNotaFiscal se houver registros, [] caso contrário
-    """
-    try:
-        with createSession() as session:
-            lote_nota_fiscal = session.query(LoteNotaFiscal).all()
-            return lote_nota_fiscal
-    except Exception as exc:
-        raise Exception(f'Erro inesperado ao selecionar todos LoteNotaFiscal: {exc}')
-
-
-def selectLoteNotaFiscalPorId(id: int) -> LoteNotaFiscal or None:
-    """Seleciona um registro da tabela lote_nota_fiscal por ID
-    :param id: int: id do LoteNotaFiscal
-    :raise TypeError: Se o id não for um inteiro
-    :raise ValueError: Se o id não for informado
-    :return: LoteNotaFiscal or None: Retorna o objeto LoteNotaFiscal se encontrado, None caso contrário
-    """
-    try:
-        if not isinstance(id, int):
-            raise TypeError('id do LoteNotaFiscal deve ser um inteiro!')
-        if not id:
-            raise ValueError('id do LoteNotaFiscal não foi informado!')
-
-        with createSession() as session:
-            lote_nota_fiscal = session.query(LoteNotaFiscal).filter(LoteNotaFiscal.id == id).first()
+                print(f'Lote Nota Fiscal inserido com sucesso!')
+                print(f'ID do LoteNotaFiscal inserido: {lote_nota_fiscal.id}')
+                print(f'nota_fiscal_fk do LoteNotaFiscal inserido: {lote_nota_fiscal.nota_fiscal_fk}')
+                print(f'nota_fiscal.numero_serie LoteNotaFiscal inserido: {str(lote_nota_fiscal.nota_fiscal.numero_serie)}')
+                print(f'lote_fk do LoteNotaFiscal inserido: {lote_nota_fiscal.lote_fk}')
+                print(f'lote.quantidade do LoteNotaFiscal inserido: {lote_nota_fiscal.lote.quantidade}')
             return lote_nota_fiscal
 
-    except TypeError as te:
-        raise TypeError(te)
+        except IntegrityError as intg_error:
+            if 'FOREIGN KEY constraint failed' in str(intg_error):
+                raise RuntimeError(f"""Erro de integridade ao inserir LoteNotaFiscal. 
+                Verifique se as FKs fornecidas existem: {nota_fiscal_fk=} | {lote_fk=}"""
+                                   )
+            elif 'UNIQUE constraint failed' in str(intg_error):
+                raise RuntimeError(f"""Erro de integridade ao inserir LoteNotaFiscal. 
+                Já existe um LoteNotaFiscal com a mesma combinação de lote e nota fiscal: {nota_fiscal_fk=} | {lote_fk=}"""
+                                   )
 
-    except ValueError as ve:
-        raise ValueError(ve)
+            else:
+                raise RuntimeError(f'Erro de integridade ao inserir Lote: {intg_error}')
 
-    except Exception as exc:
-        raise Exception(f'Erro inesperado ao selecionar LoteNotaFiscal por ID: {exc}')
+        except TypeError as te:
+            raise TypeError(te)
 
+        except ValueError as ve:
+            raise ValueError(ve)
 
-def selectAllLoteNotaFiscalPorNotaFiscal(nota_fiscal_fk: int) -> list[LoteNotaFiscal] or []:
-    """Seleciona todos os registros da tabela lote_nota_fiscal por nota_fiscal_fk
-    :param nota_fiscal_fk: int: id da nota fiscal
-    :raise TypeError: Se o nota_fiscal_fk não for um inteiro
-    :raise ValueError: Se o nota_fiscal_fk não for informado
-    :return: list[LoteNotaFiscal] or []: Retorna uma lista de objetos LoteNotaFiscal se houver registros, [] caso contrário
-    """
-    try:
-        if not isinstance(nota_fiscal_fk, int):
-            raise TypeError('nota_fiscal_fk do LoteNotaFiscal deve ser um inteiro!')
-        if not nota_fiscal_fk:
-            raise ValueError('nota_fiscal_fk do LoteNotaFiscal não foi informado!')
+        except Exception as exc:
+            print(f'Erro inesperado: {exc}')
 
-        with createSession() as session:
-            lote_nota_fiscal = session.query(LoteNotaFiscal).filter(LoteNotaFiscal.nota_fiscal_fk == nota_fiscal_fk).all()
-            return lote_nota_fiscal
+    @staticmethod
+    def selectAllLoteNotaFiscal() -> list['LoteNotaFiscal'] or []:
+        """Seleciona todos os registros da tabela lote_nota_fiscal
+        :raises Exception: Informando erro inesperado ao selecionar os LoteNotaFiscal
+        :return: list[LoteNotaFiscal] or []: Retorna uma lista de objetos LoteNotaFiscal se houver registros, [] caso contrário
+        """
+        try:
+            with createSession() as session:
+                lote_nota_fiscal = session.query(LoteNotaFiscal).all()
+                return lote_nota_fiscal
+        except Exception as exc:
+            raise Exception(f'Erro inesperado ao selecionar todos LoteNotaFiscal: {exc}')
 
-    except TypeError as te:
-        raise TypeError(te)
+    @staticmethod
+    def selectLoteNotaFiscalPorId(id: int) -> 'LoteNotaFiscal' or None:
+        """Seleciona um registro da tabela lote_nota_fiscal por ID
+        :param id: int: id do LoteNotaFiscal
+        :raise TypeError: Se o id não for um inteiro
+        :raise ValueError: Se o id não for informado
+        :return: LoteNotaFiscal or None: Retorna o objeto LoteNotaFiscal se encontrado, None caso contrário
+        """
+        try:
+            if not isinstance(id, int):
+                raise TypeError('id do LoteNotaFiscal deve ser um inteiro!')
+            if not id:
+                raise ValueError('id do LoteNotaFiscal não foi informado!')
 
-    except ValueError as ve:
-        raise ValueError(ve)
+            with createSession() as session:
+                lote_nota_fiscal = session.query(LoteNotaFiscal).filter(LoteNotaFiscal.id == id).first()
+                return lote_nota_fiscal
 
-    except Exception as exc:
-        raise Exception(f'Erro inesperado ao selecionar LoteNotaFiscal por nota_fiscal_fk: {exc}')
+        except TypeError as te:
+            raise TypeError(te)
 
+        except ValueError as ve:
+            raise ValueError(ve)
 
-def selectLoteNotaFiscalPorLote(lote_fk) -> LoteNotaFiscal or None:
-    """Seleciona um registro da tabela lote_nota_fiscal por lote_fk
-    :param lote_fk: int: id do lote
-    :raise TypeError: Se o lote_fk não for um inteiro
-    :raise ValueError: Se o lote_fk não for informado
-    :return: LoteNotaFiscal or None: Retorna o objeto LoteNotaFiscal se encontrado, None caso contrário
-    """
-    try:
-        if not isinstance(lote_fk, int):
-            raise TypeError('lote_fk do LoteNotaFiscal deve ser um inteiro!')
-        if not lote_fk:
-            raise ValueError('lote_fk do LoteNotaFiscal não foi informado!')
+        except Exception as exc:
+            raise Exception(f'Erro inesperado ao selecionar LoteNotaFiscal por ID: {exc}')
 
-        with createSession() as session:
-            lote_nota_fiscal = session.query(LoteNotaFiscal).filter(LoteNotaFiscal.lote_fk == lote_fk).first()
-            return lote_nota_fiscal
+    @staticmethod
+    def selectAllLoteNotaFiscalPorNotaFiscal(nota_fiscal_fk: int) -> list['LoteNotaFiscal'] or []:
+        """Seleciona todos os registros da tabela lote_nota_fiscal por nota_fiscal_fk
+        :param nota_fiscal_fk: int: id da nota fiscal
+        :raise TypeError: Se o nota_fiscal_fk não for um inteiro
+        :raise ValueError: Se o nota_fiscal_fk não for informado
+        :return: list[LoteNotaFiscal] or []: Retorna uma lista de objetos LoteNotaFiscal se houver registros, [] caso contrário
+        """
+        try:
+            if not isinstance(nota_fiscal_fk, int):
+                raise TypeError('nota_fiscal_fk do LoteNotaFiscal deve ser um inteiro!')
+            if not nota_fiscal_fk:
+                raise ValueError('nota_fiscal_fk do LoteNotaFiscal não foi informado!')
 
-    except TypeError as te:
-        raise TypeError(te)
+            with createSession() as session:
+                lote_nota_fiscal = session.query(LoteNotaFiscal).filter(LoteNotaFiscal.nota_fiscal_fk == nota_fiscal_fk).all()
+                return lote_nota_fiscal
 
-    except ValueError as ve:
-        raise ValueError(ve)
+        except TypeError as te:
+            raise TypeError(te)
 
-    except Exception as exc:
-        raise Exception(f'Erro inesperado ao selecionar LoteNotaFiscal por lote_fk: {exc}')
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except Exception as exc:
+            raise Exception(f'Erro inesperado ao selecionar LoteNotaFiscal por nota_fiscal_fk: {exc}')
+
+    @staticmethod
+    def selectLoteNotaFiscalPorLote(lote_fk) -> 'LoteNotaFiscal' or None:
+        """Seleciona um registro da tabela lote_nota_fiscal por lote_fk
+        :param lote_fk: int: id do lote
+        :raise TypeError: Se o lote_fk não for um inteiro
+        :raise ValueError: Se o lote_fk não for informado
+        :return: LoteNotaFiscal or None: Retorna o objeto LoteNotaFiscal se encontrado, None caso contrário
+        """
+        try:
+            if not isinstance(lote_fk, int):
+                raise TypeError('lote_fk do LoteNotaFiscal deve ser um inteiro!')
+            if not lote_fk:
+                raise ValueError('lote_fk do LoteNotaFiscal não foi informado!')
+
+            with createSession() as session:
+                lote_nota_fiscal = session.query(LoteNotaFiscal).filter(LoteNotaFiscal.lote_fk == lote_fk).first()
+                return lote_nota_fiscal
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except Exception as exc:
+            raise Exception(f'Erro inesperado ao selecionar LoteNotaFiscal por lote_fk: {exc}')
 
 
 if __name__ == '__main__':
     try:
-        insertLoteNotaFiscal(nota_fiscal_fk=1, lote_fk=1)
+        LoteNotaFiscal.insertLoteNotaFiscal(nota_fiscal_fk=1, lote_fk=1)
     except Exception as e:
         print(f'Erro ao inserir LoteNotaFiscal: {e}')
 
     try:
-        insertLoteNotaFiscal(nota_fiscal_fk=1, lote_fk=1)
+        LoteNotaFiscal.insertLoteNotaFiscal(nota_fiscal_fk=1, lote_fk=1)
     except Exception as e:
         print(f'Erro ao inserir LoteNotaFiscal: {e}')
 
     try:
-        insertLoteNotaFiscal(nota_fiscal_fk=1, lote_fk=2)
+        LoteNotaFiscal.insertLoteNotaFiscal(nota_fiscal_fk=1, lote_fk=2)
     except Exception as e:
         print(f'Erro ao inserir LoteNotaFiscal: {e}')

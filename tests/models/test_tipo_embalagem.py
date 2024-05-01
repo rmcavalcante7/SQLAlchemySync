@@ -1,5 +1,5 @@
 import pytest
-from models.tipo_embalagem import TipoEmbalagem, insertTipoEmbalagem
+from models.tipo_embalagem import TipoEmbalagem
 
 
 # @pytest.fixture
@@ -19,7 +19,7 @@ def test_instancia_tipo_embalagem():
 
 # Teste de inserção bem-sucedida
 def test_inserir_tipo_embalagem():
-    tipo_embalagem = insertTipoEmbalagem(nome=nome)
+    tipo_embalagem = TipoEmbalagem.insertTipoEmbalagem(nome=nome)
     assert (tipo_embalagem.id is not None and
             tipo_embalagem.nome == nome.upper()
             )
@@ -28,14 +28,14 @@ def test_inserir_tipo_embalagem():
 # Teste de erro de integridade ao tentar inserir o mesmo registro duas vezes
 def test_erro_integridade_mesma_combinacao():
     with pytest.raises(RuntimeError) as exc_info:
-        insertTipoEmbalagem(nome=nome)
+        TipoEmbalagem.insertTipoEmbalagem(nome=nome)
     assert f"Já existe um TipoEmbalagem com o nome '{nome.upper()}' cadastrado" in str(exc_info.value)
 
 
 # Teste de erro ao inserir tipos de dados incorretos
 def test_tipo_dados_incorretos():
     with pytest.raises(TypeError) as exc_info1:
-        insertTipoEmbalagem(nome=1)
+        TipoEmbalagem.insertTipoEmbalagem(nome=1)
 
     assert 'nome do TipoEmbalagem deve ser uma string' in str(exc_info1.value)
 
@@ -43,7 +43,7 @@ def test_tipo_dados_incorretos():
 # Teste de erro ao inserir valores vazios
 def test_valores_vazios():
     with pytest.raises(ValueError) as exc_info1:
-        insertTipoEmbalagem(nome='')
+        TipoEmbalagem.insertTipoEmbalagem(nome='')
 
     assert 'nome do TipoEmbalagem não informado!' in str(exc_info1.value)
 

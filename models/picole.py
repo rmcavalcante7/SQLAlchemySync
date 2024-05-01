@@ -53,214 +53,215 @@ class Picole(ModelBase):
                 )
 
 
-def insertPicole(preco: float, sabor_fk: int, tipo_embalagem_fk: int, tipo_picole_fk: int) -> Picole or None:
-    """Insere um Picole na tabela picole
-    :param preco: float: preço do picolé
-    :param sabor_fk: int: id do sabor
-    :param tipo_embalagem_fk: int: id do tipo de embalagem
-    :param tipo_picole_fk: int: id do tipo de picolé
-    :return: Picole or None: Retorna o objeto Picole se inserido com sucesso, None caso contrário
-    :raises TypeError: Se o preço não for float
-    :raises ValueError: Se o preço não for informado
-    :raises RuntimeError: Se as FKs sabor_fk, tipo_embalagem_fk e tipo_picole_fk não existirem retorna um erro de
-    integridade, caso contrário, retorna um erro genérico.
-    """
+    @staticmethod
+    def insertPicole(preco: float, sabor_fk: int, tipo_embalagem_fk: int, tipo_picole_fk: int) -> 'Picole' or None:
+        """Insere um Picole na tabela picole
+        :param preco: float: preço do picolé
+        :param sabor_fk: int: id do sabor
+        :param tipo_embalagem_fk: int: id do tipo de embalagem
+        :param tipo_picole_fk: int: id do tipo de picolé
+        :return: Picole or None: Retorna o objeto Picole se inserido com sucesso, None caso contrário
+        :raises TypeError: Se o preço não for float
+        :raises ValueError: Se o preço não for informado
+        :raises RuntimeError: Se as FKs sabor_fk, tipo_embalagem_fk e tipo_picole_fk não existirem retorna um erro de
+        integridade, caso contrário, retorna um erro genérico.
+        """
 
-    try:
-        # check if is string
-        if not isinstance(preco, float) and not isinstance(preco, int):
-            raise TypeError('preco do Picole deve ser numérico!')
+        try:
+            # check if is string
+            if not isinstance(preco, float) and not isinstance(preco, int):
+                raise TypeError('preco do Picole deve ser numérico!')
 
-        # check if is string
-        if not isinstance(sabor_fk, int):
-            raise TypeError('sabor_fk do Picole deve ser um inteiro!')
+            # check if is string
+            if not isinstance(sabor_fk, int):
+                raise TypeError('sabor_fk do Picole deve ser um inteiro!')
 
-        # check if is string
-        if not isinstance(tipo_embalagem_fk, int):
-            raise TypeError('tipo_embalagem_fk do Picole deve ser um inteiro!')
+            # check if is string
+            if not isinstance(tipo_embalagem_fk, int):
+                raise TypeError('tipo_embalagem_fk do Picole deve ser um inteiro!')
 
-        # check if is string
-        if not isinstance(tipo_picole_fk, int):
-            raise TypeError('tipo_picole_fk do Picole deve ser um inteiro!')
+            # check if is string
+            if not isinstance(tipo_picole_fk, int):
+                raise TypeError('tipo_picole_fk do Picole deve ser um inteiro!')
 
-        preco = float(preco)
+            preco = float(preco)
 
-        picole = Picole(preco=preco, sabor_fk=sabor_fk, tipo_embalagem_fk=tipo_embalagem_fk,
-                        tipo_picole_fk=tipo_picole_fk)
-        picole.sabor_tipoPicole_tipoEmbalagem = f'{picole.sabor_fk}_{picole.tipo_picole_fk}_{picole.tipo_embalagem_fk}'
-        with createSession() as session:
-            print(f'Inserindo Picole: {picole}')
-            session.add(picole)
-            session.commit()
+            picole = Picole(preco=preco, sabor_fk=sabor_fk, tipo_embalagem_fk=tipo_embalagem_fk,
+                            tipo_picole_fk=tipo_picole_fk)
+            picole.sabor_tipoPicole_tipoEmbalagem = f'{picole.sabor_fk}_{picole.tipo_picole_fk}_{picole.tipo_embalagem_fk}'
+            with createSession() as session:
+                print(f'Inserindo Picole: {picole}')
+                session.add(picole)
+                session.commit()
 
-            print(f'Picole inserido com sucesso!')
-            print(f'ID do Pciole inserido: {picole.id}')
-            print(f'preco do Picole inserido: {picole.preco}')
-            print(f'sabor do Picole inserido: {picole.sabor.nome}')
-            print(f'tipo_embalagem do Picole inserido: {picole.tipo_embalagem.nome}')
-            print(f'tipo_picole do Picole inserido: {picole.tipo_picole.nome}')
+                print(f'Picole inserido com sucesso!')
+                print(f'ID do Pciole inserido: {picole.id}')
+                print(f'preco do Picole inserido: {picole.preco}')
+                print(f'sabor do Picole inserido: {picole.sabor.nome}')
+                print(f'tipo_embalagem do Picole inserido: {picole.tipo_embalagem.nome}')
+                print(f'tipo_picole do Picole inserido: {picole.tipo_picole.nome}')
 
-        return picole
-    except IntegrityError as e:
-        if 'FOREIGN KEY constraint failed' in str(e):
-            raise RuntimeError(f"""Erro de integridade ao inserir Picole. Verifique se as FKs fornecidas existem: {sabor_fk=} | {tipo_embalagem_fk=} | {tipo_picole_fk=}"""
-                               )
-        elif 'UNIQUE constraint failed' in str(e):
-            raise RuntimeError(f"""Erro de integridade ao inserir Picole. Já existe um Picole com a mesma combinação de sabor_fk, tipo_picole_fk e tipo_embalagem_fk: {sabor_fk=} | {tipo_picole_fk=} | {tipo_embalagem_fk=}"""
-                               )
-        else:
-            raise RuntimeError(f'Erro de integridade ao inserir Picole: {e}')
-
-    except TypeError as te:
-        raise TypeError(te)
-
-    except Exception as e:
-        print(f'Erro inesperado: {e}')
-
-
-def selectAllPicoles() -> list[Picole] or []:
-    """Seleciona todos os Picoles na tabela picole
-    :raises Exception: Informa erro inesperado ao selecionar Picoles
-    :return: list[Picole] or []: Retorna uma lista de objetos Picole se encontrado, [] caso contrário
-    """
-    try:
-        with createSession() as session:
-            picoles = session.query(Picole).all()
-            return picoles
-
-    except Exception as exc:
-        raise Exception(f'Erro inesperado ao selecionar todos Picole: {exc}')
-
-
-def selectPicolePorId(id: int) -> Picole or None:
-    """Seleciona um Picole na tabela picole por id
-    :param id: int: id do picolé
-    :return: Picole or None: Retorna o objeto Picole se encontrado, None caso contrário
-    :raises TypeError: Se o id não for um inteiro
-    :raises ValueError: Se o id não for informado
-    :return: Picole or None: Retorna o objeto Picole se encontrado, None caso contrário
-    """
-    try:
-        if not isinstance(id, int):
-            raise TypeError('id do Picole deve ser um inteiro!')
-
-        # validar se os parâmetros informados são válidos
-        if not id:
-            raise ValueError('id do Picole não informado!')
-
-        with createSession() as session:
-            picole = session.query(Picole).filter(Picole.id == id).first()
             return picole
+        except IntegrityError as e:
+            if 'FOREIGN KEY constraint failed' in str(e):
+                raise RuntimeError(f"""Erro de integridade ao inserir Picole. Verifique se as FKs fornecidas existem: {sabor_fk=} | {tipo_embalagem_fk=} | {tipo_picole_fk=}"""
+                                   )
+            elif 'UNIQUE constraint failed' in str(e):
+                raise RuntimeError(f"""Erro de integridade ao inserir Picole. Já existe um Picole com a mesma combinação de sabor_fk, tipo_picole_fk e tipo_embalagem_fk: {sabor_fk=} | {tipo_picole_fk=} | {tipo_embalagem_fk=}"""
+                                   )
+            else:
+                raise RuntimeError(f'Erro de integridade ao inserir Picole: {e}')
 
-    except TypeError as te:
-        raise TypeError(te)
+        except TypeError as te:
+            raise TypeError(te)
 
-    except ValueError as ve:
-        raise ValueError(ve)
+        except Exception as e:
+            print(f'Erro inesperado: {e}')
 
-    except Exception as exc:
-        print(f'Erro inesperado: {exc}')
+    @staticmethod
+    def selectAllPicoles() -> list['Picole'] or []:
+        """Seleciona todos os Picoles na tabela picole
+        :raises Exception: Informa erro inesperado ao selecionar Picoles
+        :return: list[Picole] or []: Retorna uma lista de objetos Picole se encontrado, [] caso contrário
+        """
+        try:
+            with createSession() as session:
+                picoles = session.query(Picole).all()
+                return picoles
 
+        except Exception as exc:
+            raise Exception(f'Erro inesperado ao selecionar todos Picole: {exc}')
 
-def selectPicolePorSabor(sabor_fk: int) -> list[Picole] or []:
-    """Seleciona Picoles na tabela picole por sabor
-    :param sabor_fk: int: id do sabor
-    :raises TypeError: Se o sabor_fk não for um inteiro
-    :raises ValueError: Se o sabor_fk não for informado
-    :return: list[Picole] or []: Retorna uma lista de objetos Picole se encontrado, [] caso contrário
-    """
-    try:
-        if not isinstance(sabor_fk, int):
-            raise TypeError('sabor_fk do Picole deve ser um inteiro!')
+    @staticmethod
+    def selectPicolePorId(id: int) -> 'Picole' or None:
+        """Seleciona um Picole na tabela picole por id
+        :param id: int: id do picolé
+        :return: Picole or None: Retorna o objeto Picole se encontrado, None caso contrário
+        :raises TypeError: Se o id não for um inteiro
+        :raises ValueError: Se o id não for informado
+        :return: Picole or None: Retorna o objeto Picole se encontrado, None caso contrário
+        """
+        try:
+            if not isinstance(id, int):
+                raise TypeError('id do Picole deve ser um inteiro!')
 
-        # validar se os parâmetros informados são válidos
-        if not sabor_fk:
-            raise ValueError('sabor_fk do Picole não informado!')
+            # validar se os parâmetros informados são válidos
+            if not id:
+                raise ValueError('id do Picole não informado!')
 
-        with createSession() as session:
-            picoles = session.query(Picole).filter(Picole.sabor_fk == sabor_fk).all()
-            return picoles
+            with createSession() as session:
+                picole = session.query(Picole).filter(Picole.id == id).first()
+                return picole
 
-    except TypeError as te:
-        raise TypeError(te)
+        except TypeError as te:
+            raise TypeError(te)
 
-    except ValueError as ve:
-        raise ValueError(ve)
+        except ValueError as ve:
+            raise ValueError(ve)
 
-    except Exception as exc:
-        print(f'Erro inesperado: {exc}')
+        except Exception as exc:
+            print(f'Erro inesperado: {exc}')
 
+    @staticmethod
+    def selectPicolePorSabor(sabor_fk: int) -> list['Picole'] or []:
+        """Seleciona Picoles na tabela picole por sabor
+        :param sabor_fk: int: id do sabor
+        :raises TypeError: Se o sabor_fk não for um inteiro
+        :raises ValueError: Se o sabor_fk não for informado
+        :return: list[Picole] or []: Retorna uma lista de objetos Picole se encontrado, [] caso contrário
+        """
+        try:
+            if not isinstance(sabor_fk, int):
+                raise TypeError('sabor_fk do Picole deve ser um inteiro!')
 
-def selectPicolesPorTipoEmbalagem(tipo_embalagem_fk: int) -> list[Picole] or []:
-    """Seleciona Picoles na tabela picole por tipo de embalagem
-    :param tipo_embalagem_fk: int: id do tipo de embalagem
-    :raises TypeError: Se o tipo_embalagem_fk não for um inteiro
-    :raises ValueError: Se o tipo_embalagem_fk não for informado
-    :return: list[Picole] or []: Retorna uma lista de objetos Picole se encontrado, [] caso contrário
-    """
-    try:
-        if not isinstance(tipo_embalagem_fk, int):
-            raise TypeError('tipo_embalagem_fk do Picole deve ser um inteiro!')
+            # validar se os parâmetros informados são válidos
+            if not sabor_fk:
+                raise ValueError('sabor_fk do Picole não informado!')
 
-        # validar se os parâmetros informados são válidos
-        if not tipo_embalagem_fk:
-            raise ValueError('tipo_embalagem_fk do Picole não informado!')
+            with createSession() as session:
+                picoles = session.query(Picole).filter(Picole.sabor_fk == sabor_fk).all()
+                return picoles
 
-        with createSession() as session:
-            picoles = session.query(Picole).filter(Picole.tipo_embalagem_fk == tipo_embalagem_fk).all()
-            return picoles
+        except TypeError as te:
+            raise TypeError(te)
 
-    except TypeError as te:
-        raise TypeError(te)
+        except ValueError as ve:
+            raise ValueError(ve)
 
-    except ValueError as ve:
-        raise ValueError(ve)
+        except Exception as exc:
+            print(f'Erro inesperado: {exc}')
 
-    except Exception as exc:
-        print(f'Erro inesperado: {exc}')
+    @staticmethod
+    def selectPicolesPorTipoEmbalagem(tipo_embalagem_fk: int) -> list['Picole'] or []:
+        """Seleciona Picoles na tabela picole por tipo de embalagem
+        :param tipo_embalagem_fk: int: id do tipo de embalagem
+        :raises TypeError: Se o tipo_embalagem_fk não for um inteiro
+        :raises ValueError: Se o tipo_embalagem_fk não for informado
+        :return: list[Picole] or []: Retorna uma lista de objetos Picole se encontrado, [] caso contrário
+        """
+        try:
+            if not isinstance(tipo_embalagem_fk, int):
+                raise TypeError('tipo_embalagem_fk do Picole deve ser um inteiro!')
 
+            # validar se os parâmetros informados são válidos
+            if not tipo_embalagem_fk:
+                raise ValueError('tipo_embalagem_fk do Picole não informado!')
 
-def selectPicolesPorTipoPicole(tipo_picole_fk: int) -> list[Picole] or []:
-    """Seleciona Picoles na tabela picole por tipo de picolé
-    :param tipo_picole_fk: int: id do tipo de picolé
-    :raises TypeError: Se o tipo_picole_fk não for um inteiro
-    :raises ValueError: Se o tipo_picole_fk não for informado
-    :return: list[Picole] or []: Retorna uma lista de objetos Picole se encontrado, [] caso contrário
-    """
-    try:
-        if not isinstance(tipo_picole_fk, int):
-            raise TypeError('tipo_picole_fk do Picole deve ser um inteiro!')
+            with createSession() as session:
+                picoles = session.query(Picole).filter(Picole.tipo_embalagem_fk == tipo_embalagem_fk).all()
+                return picoles
 
-        # validar se os parâmetros informados são válidos
-        if not tipo_picole_fk:
-            raise ValueError('tipo_picole_fk do Picole não informado!')
+        except TypeError as te:
+            raise TypeError(te)
 
-        with createSession() as session:
-            picoles = session.query(Picole).filter(Picole.tipo_picole_fk == tipo_picole_fk).all()
-            return picoles
+        except ValueError as ve:
+            raise ValueError(ve)
 
-    except TypeError as te:
-        raise TypeError(te)
+        except Exception as exc:
+            print(f'Erro inesperado: {exc}')
 
-    except ValueError as ve:
-        raise ValueError(ve)
+    @staticmethod
+    def selectPicolesPorTipoPicole(tipo_picole_fk: int) -> list['Picole'] or []:
+        """Seleciona Picoles na tabela picole por tipo de picolé
+        :param tipo_picole_fk: int: id do tipo de picolé
+        :raises TypeError: Se o tipo_picole_fk não for um inteiro
+        :raises ValueError: Se o tipo_picole_fk não for informado
+        :return: list[Picole] or []: Retorna uma lista de objetos Picole se encontrado, [] caso contrário
+        """
+        try:
+            if not isinstance(tipo_picole_fk, int):
+                raise TypeError('tipo_picole_fk do Picole deve ser um inteiro!')
 
-    except Exception as exc:
-        print(f'Erro inesperado: {exc}')
+            # validar se os parâmetros informados são válidos
+            if not tipo_picole_fk:
+                raise ValueError('tipo_picole_fk do Picole não informado!')
+
+            with createSession() as session:
+                picoles = session.query(Picole).filter(Picole.tipo_picole_fk == tipo_picole_fk).all()
+                return picoles
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except Exception as exc:
+            print(f'Erro inesperado: {exc}')
 
 
 if __name__ == '__main__':
     try:
-        insertPicole(preco=1.5, sabor_fk=1, tipo_embalagem_fk=1, tipo_picole_fk=1)
+        Picole.insertPicole(preco=1.5, sabor_fk=1, tipo_embalagem_fk=1, tipo_picole_fk=1)
     except Exception as e:
         print(f'Erro ao inserir Picole: {e}')
 
     try:
-        insertPicole(preco=1.5, sabor_fk=1, tipo_embalagem_fk=1, tipo_picole_fk=1)
+        Picole.insertPicole(preco=1.5, sabor_fk=1, tipo_embalagem_fk=1, tipo_picole_fk=1)
     except Exception as e:
         print(f'Erro ao inserir Picole: {e}')
 
     try:
-        insertPicole(preco=1.5, sabor_fk=1, tipo_embalagem_fk=1, tipo_picole_fk=2)
+        Picole.insertPicole(preco=1.5, sabor_fk=1, tipo_embalagem_fk=1, tipo_picole_fk=2)
     except Exception as e:
         print(f'Erro ao inserir Picole: {e}')
