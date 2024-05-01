@@ -226,6 +226,92 @@ class Revendedor(ModelBase):
         except Exception as exc:
             print(f'Erro inesperado: {exc}')
 
+    
+    @staticmethod
+    def updateRevendedor(id_revendedor: int, nome: str, cnpj: str, razao_social: str, contato: str) -> 'Revendedor':
+        """Atualiza um Revendedor na tabela revendedor
+        :param id_revendedor: int: id do revendedor
+        :param nome: str: nome do revendedor
+        :param cnpj: str: CNPJ do revendedor
+        :param razao_social: str: razão social do revendedor
+        :param contato: str: contato do revendedor
+        :return: Revendedor: Retorna o objeto Revendedor atualizado
+        :raises TypeError: Se o id_revendedor não for um inteiro
+        :raises TypeError: Se o nome, cnpj, razao_social ou contato não forem strings
+        :raises ValueError: Se o nome, cnpj, razao_social ou contato forem composto só por espaços
+        :raises ValueError: Se o id_revendedor não existir na base
+        :raises RuntimeError: Se ocorrer um erro de integridade ao atualizar o revendedor, especificado para o cnpj. Caso
+        seja por outro motivo, será lançado um erro genérico.
+        """
+        try:
+            if not isinstance(id_revendedor, int):
+                raise TypeError('id do Revendedor deve ser um inteiro!')
+            if not isinstance(nome, str):
+                raise TypeError('nome do Revendedor deve ser uma string!')
+            if not isinstance(cnpj, str):
+                raise TypeError('cnpj do Revendedor deve ser uma string!')
+            if not isinstance(razao_social, str):
+                raise TypeError('razao_social do Revendedor deve ser uma string!')
+            if not isinstance(contato, str):
+                raise TypeError('contato do Revendedor deve ser uma string!')
+            
+            
+            if len(nome) > 0 and all(caractere.isspace() for caractere in nome):
+                raise ValueError('nome do Revendedor não pode ser composto só por espaços!')
+            if len(cnpj) > 0 and all(caractere.isspace() for caractere in cnpj):
+                raise ValueError('cnpj do Revendedor não pode ser composto só por espaços!')
+            if len(razao_social) > 0 and all(caractere.isspace() for caractere in razao_social):
+                raise ValueError('razao_social do Revendedor não pode ser composto só por espaços!')
+            if len(contato) > 0 and all(caractere.isspace() for caractere in contato):
+                raise ValueError('contato do Revendedor não pode ser composto só por espaços!')
+            
+            nome = nome.strip().upper()
+            cnpj = cnpj.strip().upper()
+            razao_social = razao_social.strip().upper()
+            contato = contato.strip().upper()
+
+            with createSession() as session:
+                revendedor = session.query(Revendedor).filter_by(id=id_revendedor).first()
+
+                if not revendedor:
+                    raise ValueError(f'Revendedor com id={id_revendedor} não cadastrado na base!')
+
+                if nome:
+                    revendedor.nome = nome
+
+                if cnpj:
+                    revendedor.cnpj = cnpj
+                else:
+                    cnpj = revendedor.cnpj
+
+                if razao_social:
+                    revendedor.razao_social = razao_social
+
+                if contato:
+                    revendedor.contato = contato
+
+                revendedor.data_atualizacao = datetime.now()
+                session.commit()
+                return revendedor
+
+        except IntegrityError as intg_error:
+            if 'UNIQUE constraint failed' in str(intg_error):
+                if 'revendedor.cnpj' in str(intg_error):
+                    raise RuntimeError(f"Já existe um Revendedor com o CNPJ '{cnpj}' cadastrado. "
+                                       f"O CNPJ deve ser único.")
+            else:
+                # Tratar outros erros de integridade do SQLAlchemy
+                raise RuntimeError(f'Erro de integridade ao inserir Revendedor: {intg_error}')
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except Exception as exp:
+            raise Exception(f'Erro inesperado ao atualizar Ingrediente: {exp}')
+
 
 if __name__ == '__main__':
     try:

@@ -48,7 +48,6 @@ class AditivoNutritivo(ModelBase):
         """Retorna uma representação do objeto em forma de 'string'."""
         return f'<Aditivo Nutritivo(nome={self.nome}, formula_quimica={self.formula_quimica})>'
 
-
     @staticmethod
     def insertAditivoNutritivo(nome: str, formula_quimica: str) -> 'AditivoNutritivo' or None:
         """Insere um AditivoNutritivo na tabela aditivos_nutritivos
@@ -106,8 +105,9 @@ class AditivoNutritivo(ModelBase):
                     raise RuntimeError(f"Já existe um AditivoNutritivo com o nome '{nome}' cadastrado. "
                                        f"O nome deve ser único.")
                 elif 'aditivo_nutritivo.formula_quimica' in str(intg_error):
-                    raise RuntimeError(f"Já existe um AditivoNutritivo com a fórmula química '{formula_quimica}' cadastrada. "
-                                       f"A fórmula química deve ser única.")
+                    raise RuntimeError(
+                        f"Já existe um AditivoNutritivo com a fórmula química '{formula_quimica}' cadastrada. "
+                        f"A fórmula química deve ser única.")
             else:
                 # Tratar outros erros de integridade do SQLAlchemy
                 raise RuntimeError(f'Erro de integridade ao inserir AditivoNutritivo: {intg_error}')
@@ -135,7 +135,7 @@ class AditivoNutritivo(ModelBase):
 
             # utilizando first: caso não encontre retorna None
             with createSession() as session:
-                aditivo_nutritivo: AditivoNutritivo = session.query(AditivoNutritivo).\
+                aditivo_nutritivo: AditivoNutritivo = session.query(AditivoNutritivo). \
                     filter_by(id=id_aditivo_nutritivo).first()
 
                 return aditivo_nutritivo
@@ -193,7 +193,7 @@ class AditivoNutritivo(ModelBase):
                 raise ValueError('nome do AditivoNutritivo não informado!')
 
             with createSession() as session:
-                aditivo_nutritivo: AditivoNutritivo = session.query(AditivoNutritivo).\
+                aditivo_nutritivo: AditivoNutritivo = session.query(AditivoNutritivo). \
                     filter_by(nome=nome).first()
                 return aditivo_nutritivo
 
@@ -223,7 +223,7 @@ class AditivoNutritivo(ModelBase):
                 raise ValueError('formula_quimica do AditivoNutritivo não informada!')
 
             with createSession() as session:
-                aditivo_nutritivo: AditivoNutritivo = session.query(AditivoNutritivo).\
+                aditivo_nutritivo: AditivoNutritivo = session.query(AditivoNutritivo). \
                     filter_by(formula_quimica=formula_quimica).first()
                 return aditivo_nutritivo
 
@@ -249,6 +249,79 @@ class AditivoNutritivo(ModelBase):
         except Exception as exc:
             raise Exception(f'Erro inesperado ao selecionar todos AditivoNutritivo: {exc}')
 
+    @staticmethod
+    def updateAditivoNutritivo(id_aditivo_nutritivo: int,
+                               nome: str = '',
+                               formula_quimica: str = '') -> 'AditivoNutritivo':
+        """Atualiza um aditivo nutritivo cadastrado no banco de dados a partir do id.
+        :param id_aditivo_nutritivo: int: identificador do aditivo nutritivo
+        :param nome: str: caso se deseje atualizar o nome do aditivo nutritivo, informar o novo nome
+        :param formula_quimica: str: caso se deseje atualizar a fórmula química do aditivo nutritivo,
+                                    informar a nova fórmula
+        :return: AditivoNutritivo: Retorna o objeto AditivoNutritivo atualizado
+        :raises TypeError: Se o id não for um inteiro e não for informado
+        :raises ValueError: Se o nome ou a fórmula química informados forem compostos só por espaços
+        :raises RuntimeError: Se ocorrer um erro de integridade ao atualizar o aditivo nutritivo, especificado para o
+        nome ou para a fórmula química, caso já existam registros com esses valores.
+        """
+        try:
+            if not isinstance(id_aditivo_nutritivo, int):
+                raise TypeError('id do AditivoNutritivo deve ser um inteiro!')
+
+            if not isinstance(nome, str):
+                raise TypeError('nome do AditivoNutritivo deve ser uma string!')
+
+            if len(nome) > 0 and all(caractere.isspace() for caractere in nome):
+                raise ValueError('nome do AditivoNutritivo não pode ser composto só por espaços!')
+
+            if not isinstance(formula_quimica, str):
+                raise TypeError('formula_quimica do AditivoNutritivo deve ser uma string!')
+
+            if len(formula_quimica) > 0 and all(caractere.isspace() for caractere in formula_quimica):
+                raise ValueError('formula_quimica do AditivoNutritivo não pode ser composta só por espaços!')
+
+            nome = nome.strip().upper()
+            formula_quimica = formula_quimica.strip().upper()
+
+            with createSession(echo=True) as session:
+                adititvo_nutritivo = session.query(AditivoNutritivo). \
+                    filter_by(id=id_aditivo_nutritivo).first()
+
+                if not adititvo_nutritivo:
+                    raise ValueError(f'AditivoNutritivo com id={id_aditivo_nutritivo} não cadastrado na base!')
+
+
+                adititvo_nutritivo.nome = nome.strip().upper() if nome.strip() else adititvo_nutritivo.nome
+
+                adititvo_nutritivo.formula_quimica = formula_quimica.strip().upper() \
+                    if formula_quimica.strip() else adititvo_nutritivo.formula_quimica
+
+                adititvo_nutritivo.data_atualizacao = datetime.now()
+                session.commit()
+                return adititvo_nutritivo
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except IntegrityError as intg_error:
+            if 'UNIQUE constraint failed' in str(intg_error):
+                if 'aditivo_nutritivo.nome' in str(intg_error):
+                    raise RuntimeError(f"Já existe um AditivoNutritivo com o nome '{nome}' cadastrado. "
+                                       f"O nome deve ser único.")
+                elif 'aditivo_nutritivo.formula_quimica' in str(intg_error):
+                    raise RuntimeError(
+                        f"Já existe um AditivoNutritivo com a fórmula química '{formula_quimica}' cadastrada. "
+                        f"A fórmula química deve ser única.")
+            else:
+                # Tratar outros erros de integridade do SQLAlchemy
+                raise RuntimeError(f'Erro de integridade ao inserir AditivoNutritivo: {intg_error}')
+
+        except Exception as exp:
+            raise Exception(f'Erro inesperado ao atualizar AditivoNutritivo: {exp}')
+
 
 if __name__ == '__main__':
     # try:
@@ -270,16 +343,19 @@ if __name__ == '__main__':
     # print('fim')
 
     # selecionar aditivo por id
-    aditivo = AditivoNutritivo.selectAditivoNutritivoPorId(999)
+    # aditivo = AditivoNutritivo.selectAditivoNutritivoPorId(999)
+    #
+    # lista_aditivo_nutritivo = AditivoNutritivo.selectAllAditivosNutritivos()
+    # for aditivo in lista_aditivo_nutritivo:
+    #     print(f'Aditivo Nutritivo: '
+    #           f'id={aditivo.id}, '
+    #           f'nome={aditivo.nome}, '
+    #           f'formula_quimica={aditivo.formula_quimica},'
+    #           f'data_criacao={aditivo.data_criacao},'
+    #           f'data_atualizacao={aditivo.data_atualizacao}'
+    #           )
 
-
-
-    lista_aditivo_nutritivo = AditivoNutritivo.selectAllAditivosNutritivos()
-    for aditivo in lista_aditivo_nutritivo:
-        print(f'Aditivo Nutritivo: '
-              f'id={aditivo.id}, '
-              f'nome={aditivo.nome}, '
-              f'formula_quimica={aditivo.formula_quimica},'
-              f'data_criacao={aditivo.data_criacao},'
-              f'data_atualizacao={aditivo.data_atualizacao}'
-              )
+    aditivo_atualizado = AditivoNutritivo.updateAditivoNutritivo(id_aditivo_nutritivo=0,
+                                                                 nome='VITAMINA C',
+                                                                 formula_quimica='')
+    print(aditivo_atualizado)

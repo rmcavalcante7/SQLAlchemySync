@@ -151,34 +151,79 @@ class Ingrediente(ModelBase):
             print(f'Erro inesperado: {exc}')
 
 
+    @staticmethod
+    def updateIngrediente(id_ingrediente: int, nome: str = '') -> 'Ingrediente':
+        """Atualiza um Ingrediente na tabela ingrediente
+        :param id_ingrediente: int: id do ingrediente
+        :param nome: str: nome do ingrediente
+        :return: Ingrediente: Retorna o objeto Ingrediente se atualizado com sucesso
+        :raises TypeError: Se o id_ingrediente não for inteiro
+        :raises TyperError: Se o nome não for string
+        :raises ValueError: Se o nome não for informado ou for composto só por espaços
+        :raises RuntimeError: Se ocorrer um erro de integridade ao atualizar o ingrediente, especificado para o nome. Caso
+        seja por outro motivo, será lançado um erro genérico.
+        """
+        try:
+            # check if is integer
+            if not isinstance(id_ingrediente, int):
+                raise TypeError('id do Ingrediente deve ser um inteiro!')
+
+            if not isinstance(nome, str):
+                raise TypeError('nome do Ingrediente deve ser uma string!')
+
+            # check if is string
+            if len(nome) > 0 and all(caractere.isspace() for caractere in nome):
+                raise ValueError('nome do Ingrediente não pode ser composto só por espaços!')
+
+            nome = nome.strip().upper()
+
+            with createSession() as session:
+                ingrediente = session.query(Ingrediente).filter_by(id=id_ingrediente).first()
+
+                if not ingrediente:
+                    raise ValueError(f'Ingrediente com id={id_ingrediente} não cadastrado na base!')
+
+                if nome:
+                    ingrediente.nome = nome
+                else:
+                    nome = ingrediente.nome
+
+                ingrediente.data_atualizacao = datetime.now()
+
+                session.commit()
+                return ingrediente
+
+        except IntegrityError as intg_error:
+            if 'UNIQUE constraint failed' in str(intg_error):
+                if 'ingrediente.nome' in str(intg_error):
+                    raise RuntimeError(f"Já existe um Ingrediente com o nome '{nome}' cadastrado. "
+                                       f"O nome deve ser único.")
+            else:
+                # Tratar outros erros de integridade do SQLAlchemy
+                raise RuntimeError(f'Erro de Ingrediente ao inserir ingrediente: {intg_error}')
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except Exception as exp:
+            raise Exception(f'Erro inesperado ao atualizar Ingrediente: {exp}')
+
+
 if __name__ == '__main__':
-    try:
-        Ingrediente.insertIngrediente(nome='sal')
-    except Exception as e:
-        print(f'Erro ao inserir Ingrediente: {e}')
+    # try:
+    #     Ingrediente.insertIngrediente(nome='sal')
+    # except Exception as e:
+    #     print(f'Erro ao inserir Ingrediente: {e}')
+    #
+    # try:
+    #     Ingrediente.insertIngrediente(nome='açúcar')
+    # except Exception as e:
+    #     print(f'Erro ao inserir Ingrediente: {e}')
+    #
 
-    try:
-        Ingrediente.insertIngrediente(nome='açúcar')
-    except Exception as e:
-        print(f'Erro ao inserir Ingrediente: {e}')
-
-    try:
-        Ingrediente.insertIngrediente(nome='Leite')
-    except Exception as e:
-        print(f'Erro ao inserir Ingrediente: {e}')
-
-    try:
-        Ingrediente.insertIngrediente(nome='Leite')
-    except Exception as e:
-        print(f'Erro ao inserir Ingrediente: {e}')
-
-    try:
-        Ingrediente.insertIngrediente(nome='manga')
-    except Exception as e:
-        print(f'Erro ao inserir Ingrediente: {e}')
-
-    try:
-        Ingrediente.insertIngrediente(nome='banana')
-    except Exception as e:
-        print(f'Erro ao inserir Ingrediente: {e}')
-    print('fim')
+    ingrediente = Ingrediente.updateIngrediente(id_ingrediente=3,
+                                                nome='açucar')
+    print('ingrediente')

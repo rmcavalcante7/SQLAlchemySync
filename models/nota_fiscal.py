@@ -4,7 +4,7 @@ from datetime import datetime
 from models.model_base import ModelBase
 from models.revendedor import Revendedor
 from models.lote import Lote
-from typing import List
+from typing import List, Union
 from conf.db_session import createSession
 from sqlalchemy.exc import IntegrityError
 
@@ -14,7 +14,9 @@ class NotaFiscal(ModelBase):
 
     id: int = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),  # para funcionar o autoincrement no sqlite
                         primary_key=True, autoincrement=True)
-    valor: float = sa.Column(sa.DECIMAL(decimal_return_scale=2), nullable=False)
+    valor: float = sa.Column(sa.DECIMAL(decimal_return_scale=2).with_variant(sa.Float(), "sqlite"),
+                             nullable=False)
+
     numero_serie: str = sa.Column(sa.String(45), unique=True, nullable=False)
     descricao: str = sa.Column(sa.String(200), nullable=False)
 
@@ -215,6 +217,91 @@ class NotaFiscal(ModelBase):
         except Exception as exc:
             print(f'Erro inesperado: {exc}')
 
+
+    @staticmethod
+    def updateNotaFiscal(id_nf: int, valor: Union[float, None], revendedor_fk: Union[int, None],
+                         numero_serie: str = '', descricao: str = '') -> 'NotaFiscal':
+        """Atualiza uma NotaFiscal na tabela nota_fiscal
+        :param id: int: id da NotaFiscal
+        :param valor: float: valor da nota fiscal, duas casas decimais
+        :param numero_serie: str: número de série da nota fiscal
+        :param descricao: str: descrição da nota fiscal
+        :param revendedor_fk: int: id do revendedor
+        :return: NotaFiscal or None: Retorna o objeto NotaFiscal se atualizado com sucesso, None caso contrário
+        :raises TypeError: Se o id não for um inteiro, ou se o valor não for um float, ou se o número de série ou a descrição não forem strings
+        :raises ValueError: Se o id, o valor, o número de série ou a descrição não forem informados
+        :raises RuntimeError: Se ocorrer um erro de integridade ao atualizar a nota fiscal, especificado para o número de série
+        ou para o revendedor, caso já existam registros com esses valores. Caso seja por outr motivo, será lançado
+        um erro genérico.
+        """
+        try:
+            # check if is integer
+            if not isinstance(id_nf, int):
+                raise TypeError('id_nf da Nota Fiscal deve ser um inteiro!')
+            if not isinstance(valor, float) and not isinstance(valor, int):
+                raise TypeError('valor da NotaFiscal deve ser um número ou não deve informado!')
+            if not isinstance(numero_serie, str):
+                raise TypeError('numero_serie da NotaFiscal deve ser uma string!')
+            if not isinstance(descricao, str):
+                raise TypeError('descricao da NotaFiscal deve ser uma string!')
+            if not isinstance(revendedor_fk, int):
+                raise TypeError('revendedor_fk da NotaFiscal deve ser um inteiro ou não deve informado!')
+
+            if len(numero_serie) > 0 and all(caractere.isspace() for caractere in numero_serie):
+                raise ValueError('numero_serie da NotaFiscal não pode ser composto só por espaços!')
+
+            if len(descricao) > 0 and all(caractere.isspace() for caractere in descricao):
+                raise ValueError('descricao da NotaFiscal não pode ser composto só por espaços!')
+
+            numero_serie = numero_serie.strip().upper()
+            descricao = descricao.strip().upper()
+            valor = round(float(valor), 2) if valor else None
+
+            with createSession() as session:
+                nota_fiscal = session.query(NotaFiscal).filter_by(id=id_nf).first()
+
+                if not nota_fiscal:
+                    raise ValueError(f'Nota Fiscal com id={id_nf} não cadastrada na base!')
+
+                if valor:
+                    nota_fiscal.valor = valor
+
+                if numero_serie:
+                    nota_fiscal.numero_serie = numero_serie
+                else:
+                    numero_serie = nota_fiscal.numero_serie
+
+                if descricao:
+                    nota_fiscal.descricao = descricao
+
+                if revendedor_fk:
+                    nota_fiscal.revendedor_fk = revendedor_fk
+                else:
+                    revendedor_fk = nota_fiscal.revendedor_fk
+
+                session.commit()
+                return nota_fiscal
+
+        except IntegrityError as intg_error:
+            if 'UNIQUE constraint failed' in str(intg_error):
+                if 'nota_fiscal.numero_serie' in str(intg_error):
+                    raise RuntimeError(f"Já existe uma Nota Fiscal com o número de série '{numero_serie}' cadastrado. "
+                                       f"O número de série deve ser único.")
+            elif 'FOREIGN KEY constraint failed' in str(intg_error):
+                raise RuntimeError(f"""Erro de integridade ao inserir LoteNotaFiscal. 
+                                        Verifique se a FK fornecida existe: {revendedor_fk=}"""
+                                   )
+            else:
+                raise RuntimeError(f'Erro de integridade ao inserir Nota Fiscal: {intg_error}')
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except Exception as exp:
+            raise Exception(f'Erro inesperado ao atualizar Ingrediente: {exp}')
 
 
 if __name__ == '__main__':

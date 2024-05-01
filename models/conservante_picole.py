@@ -1,3 +1,5 @@
+from typing import Union
+
 import sqlalchemy as sa
 import sqlalchemy.orm as orm
 from datetime import datetime
@@ -42,7 +44,6 @@ class ConservantePicole(ModelBase):
                 f'conservante_fk={self.conservante_fk})'
                 f'conservante_picole={self.conservante_picole}'
                 )
-
 
     @staticmethod
     def insertConservantePicole(picole_fk: int, conservante_fk: int) -> 'ConservantePicole' or None:
@@ -90,9 +91,9 @@ class ConservantePicole(ModelBase):
                 raise RuntimeError(f"""
                 Erro de integridade ao inserir ConservantePicole. 
                 Já existe um ConservantePicole com a mesma combinação de picole_fk e conservante_fk: {picole_fk=} | {conservante_fk=}
-                """ )
+                """)
             else:
-                raise RuntimeError(f'Erro de integridade ao inserir Lote: {intg_error}')
+                raise RuntimeError(f'Erro de integridade ao inserir Conservante: {intg_error}')
 
         except TypeError as te:
             raise TypeError(te)
@@ -102,9 +103,9 @@ class ConservantePicole(ModelBase):
 
     @staticmethod
     def selectAllConservantePicole():
-        """Seleciona todos os registros da tabela aditivo_nutritivo_picole
+        """Seleciona todos os registros da tabela conservante_picole
             :raises Exception: Informando erro inesperado ao selecionar os ConservantePicole
-            :return: List[AditivoNutritivoPicole]: Retorna uma lista de objetos AditivoNutritivoPicole
+            :return: List[ConservantePicole]: Retorna uma lista de objetos ConservantePicole
         """
         try:
             with createSession() as session:
@@ -156,7 +157,8 @@ class ConservantePicole(ModelBase):
                 raise ValueError('O picole_fk do ConservantePicole deve ser informado!')
 
             with createSession() as session:
-                conservante_picole = session.query(ConservantePicole).filter(ConservantePicole.picole_fk == picole_fk).all()
+                conservante_picole = session.query(ConservantePicole).filter(
+                    ConservantePicole.picole_fk == picole_fk).all()
                 return conservante_picole
 
         except TypeError as te:
@@ -185,7 +187,8 @@ class ConservantePicole(ModelBase):
                 raise ValueError('O conservante_fk do ConservantePicole deve ser informado!')
 
             with createSession() as session:
-                conservante_picole = session.query(ConservantePicole).filter(ConservantePicole.conservante_fk == conservante_fk).all()
+                conservante_picole = session.query(ConservantePicole).filter(
+                    ConservantePicole.conservante_fk == conservante_fk).all()
                 return conservante_picole
 
         except TypeError as te:
@@ -197,24 +200,100 @@ class ConservantePicole(ModelBase):
         except Exception as exc:
             raise RuntimeError(f'Erro inesperado ao selecionar todos ConservantePicole por conservante_fk: {exc}')
 
+    @staticmethod
+    def updateConservantePicole(id_cons_picole: int,
+                                picole_fk: Union[int, None],
+                                conservante_fk: Union[int, None]) -> 'ConservantePicole':
+        """Atualiza um ConservantePicole na tabela conservante_picole
+        :param id_cons_picole: int: id do ConservantePicole
+        :param picole_fk: int: id do picolé
+        :param conservante_fk: int: id do conservante
+        :return: ConservantePicole: Retorna o objeto ConservantePicole atualizado
+        :raises TypeError: Se o id_cons_picole, picole_fk ou o conservante_fk não forem inteiros
+        :raises RuntimeError: Se as FKs picole_fk e conservante_fk não existirem retorna um erro de integridade, caso
+        contrário, retorna um erro genérico.
+           """
+        try:
+            if not isinstance(id_cons_picole, int):
+                raise TypeError('id_adit_nut_picole do ConservantePicole deve ser um inteiro!')
+
+            if not isinstance(picole_fk, int) and picole_fk is not None:
+                raise TypeError('picole_fk do ConservantePicole deve ser um inteiro ou não deve ser informado!')
+
+            if not isinstance(conservante_fk, int) and conservante_fk is not None:
+                raise TypeError('conservante_fk do ConservantePicole deve ser um inteiro ou não deve ser informado!')
+
+            with createSession() as session:
+                conservante_picole = session.query(ConservantePicole). \
+                    filter_by(id=id_cons_picole).first()
+
+                if not conservante_picole:
+                    raise ValueError(f'ConservantePicole com id={id_cons_picole} não encontrado!')
+
+
+                if picole_fk:
+                    conservante_picole.picole_fk = picole_fk
+                else:
+                    picole_fk = conservante_picole.picole_fk
+
+                if conservante_fk:
+                    conservante_picole.conservante_fk = conservante_fk
+                else:
+                    conservante_fk = conservante_picole.conservante_fk
+
+                conservante_picole.conservante_picole = (f'{conservante_picole.conservante_fk}-'
+                                                         f'{conservante_picole.picole_fk}')
+                conservante_picole.data_atualizacao = datetime.now()
+                session.commit()
+                return conservante_picole
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except IntegrityError as intg_error:
+            if 'FOREIGN KEY constraint failed' in str(intg_error):
+                raise RuntimeError(f"Erro de integridade ao inserir ConservantePicole. "
+                                   f"Verifique se as FKs fornecidas existem: "
+                                   f"{picole_fk=} | {conservante_fk=}"
+                                   )
+            elif 'UNIQUE constraint failed' in str(intg_error):
+                raise RuntimeError(f"""
+                Erro de integridade ao inserir ConservantePicole. 
+                Já existe um ConservantePicole com a mesma combinação de picole_fk e conservante_fk: {picole_fk=} | {conservante_fk=}
+                """)
+            else:
+                raise RuntimeError(f'Erro de integridade ao inserir Lote: {intg_error}')
+
+        except Exception as exc:
+            raise RuntimeError(f'Erro inesperado ao atualizar ConservantePicole: {exc}')
+
 
 if __name__ == '__main__':
-    try:
-        ConservantePicole.insertConservantePicole(picole_fk=1, conservante_fk=1)
-    except Exception as e:
-        print(f'Erro ao inserir ConservantePicole: {e}')
+    # try:
+    #     ConservantePicole.insertConservantePicole(picole_fk=1, conservante_fk=1)
+    # except Exception as e:
+    #     print(f'Erro ao inserir ConservantePicole: {e}')
+    #
+    # try:
+    #     ConservantePicole.insertConservantePicole(picole_fk=1, conservante_fk=1)
+    # except Exception as e:
+    #     print(f'Erro ao inserir ConservantePicole: {e}')
+    #
+    # try:
+    #     ConservantePicole.insertConservantePicole(picole_fk=1, conservante_fk=2)
+    # except Exception as e:
+    #     print(f'Erro ao inserir ConservantePicole: {e}')
+    #
+    # try:
+    #     ConservantePicole.insertConservantePicole(picole_fk=100, conservante_fk=100)
+    # except Exception as e:
+    #     print(f'Erro ao inserir ConservantePicole: {e}')
 
-    try:
-        ConservantePicole.insertConservantePicole(picole_fk=1, conservante_fk=1)
-    except Exception as e:
-        print(f'Erro ao inserir ConservantePicole: {e}')
-
-    try:
-        ConservantePicole.insertConservantePicole(picole_fk=1, conservante_fk=2)
-    except Exception as e:
-        print(f'Erro ao inserir ConservantePicole: {e}')
-
-    try:
-        ConservantePicole.insertConservantePicole(picole_fk=100, conservante_fk=100)
-    except Exception as e:
-        print(f'Erro ao inserir ConservantePicole: {e}')
+    conser_picole = ConservantePicole.updateConservantePicole(id_cons_picole=1999,
+                                                              picole_fk=1999,
+                                                              conservante_fk=3
+                                                              )
+    print(conser_picole)

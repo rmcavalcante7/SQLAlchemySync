@@ -68,15 +68,17 @@ def createEngine(sqlite: bool = True, echo: bool = False, timeout: int = 30) -> 
     return __engine
 
 
-def createSession(sqlite: bool = True) -> Session:
+def createSession(sqlite: bool = True, echo: bool = False, timeout: int = 30) -> Session:
     """Cria uma sessão com o banco de dados para realizar operações de CRUD
     :param sqlite: bool: se True, usa o sqlite, se False, usa o postgres
+    :param echo: bool: se True, mostra as queries executadas, se False, não mostra
+    :param timeout: int: tempo limite para conexão, padrão 30 segundos
     :return: Session
     """
 
     global __engine
     if __engine is None:
-        __engine = createEngine(sqlite=sqlite)
+        __engine = createEngine(sqlite=sqlite, echo=echo, timeout=timeout)
 
     __session = sessionmaker(bind=__engine, expire_on_commit=False, class_=Session)
     session: Session = __session()

@@ -163,19 +163,98 @@ class Conservante(ModelBase):
             print(f'Erro inesperado: {exc}')
 
 
-if __name__ == '__main__':
-    try:
-        Conservante.insertConservante(nome='Sorbato de Potássio',
-                                      descricao='Utilizado para conservar alimentos. '
-                                                'Evita a proliferação de fungos e leveduras.')
-    except Exception as e:
-        print(f'Erro ao inserir Conservante: {e}')
+    @staticmethod
+    def updateConservante(id_conservante: int, nome: str = '', descricao: str = '') -> 'Conservante':
+        """Atualiza um Conservante na tabela conservante
+        :param id_conservante: int: id do Conservante
+        :param nome: str: nome do Conservante
+        :param descricao: str: fórmula química do Conservante
+        :return: Conservante: Retorna o objeto Conservante atualizado
+        :raises TypeError: Se o id, nome ou a descrição não forem inteiros
+        :raises ValueError: Se o id, nome ou a descrição não forem informados
+        :raises RuntimeError: Se ocorrer um erro de integridade ao atualizar o conservante, especificado para o nome. Caso
+        seja por outro motivo, será lançado um erro genérico.
+        """
 
-    try:
-        Conservante.insertConservante(nome='Benzoato de Sódio',
-                                      descricao='Utilizado para conservar alimentos. '
-                                                'É útil para conservar alimentos ácidos, '
-                                                'como sucos de frutas.')
-    except Exception as e:
-        print(f'Erro ao inserir Conservante: {e}')
-    print('fim')
+        try:
+            # check if is int
+            if not isinstance(id_conservante, int):
+                raise TypeError('id do Conservante deve ser um inteiro!')
+
+            # check if is string
+            if not isinstance(nome, str):
+                raise TypeError('nome do Conservante deve ser uma string!')
+
+            if len(nome) > 0 and all(caractere.isspace() for caractere in nome):
+                raise ValueError('nome do Conservante não pode ser composto só por espaços!')
+
+            if not isinstance(descricao, str):
+                raise TypeError('descricao do Conservante deve ser uma string!')
+
+            if len(descricao) > 0 and all(caractere.isspace() for caractere in descricao):
+                raise ValueError('descricao do Conservante não pode ser composto só por espaços!')
+
+            nome = nome.strip().upper()
+            descricao = descricao.strip().upper()
+
+            with createSession() as session:
+                conservante = session.query(Conservante).filter_by(id=id_conservante).first()
+
+                if not conservante:
+                    raise ValueError(f'Conservante com o ID {id_conservante} não cadastrado na base!')
+
+                if nome:
+                    conservante.nome = nome
+                else:
+                    nome = conservante.nome
+
+                if descricao:
+                    conservante.descricao = descricao
+
+                conservante.data_atualizacao = datetime.now()
+                session.commit()
+                return conservante
+
+        except IntegrityError as intg_error:
+            if 'UNIQUE constraint failed' in str(intg_error):
+                if 'conservante.nome' in str(intg_error):
+                    raise RuntimeError(f"Já existe um Conservante com o nome '{nome}' cadastrado. "
+                                       f"O nome deve ser único.")
+
+            else:
+                # Tratar outros erros de integridade do SQLAlchemy
+                raise RuntimeError(f'Erro de integridade ao atualizar Conservante: {intg_error}')
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except Exception as exc:
+            raise Exception(f'Erro inesperado ao atualizar Conservante: {exc}')
+
+
+if __name__ == '__main__':
+    # try:
+    #     Conservante.insertConservante(nome='Sorbato de Potássio',
+    #                                   descricao='Utilizado para conservar alimentos. '
+    #                                             'Evita a proliferação de fungos e leveduras.')
+    # except Exception as e:
+    #     print(f'Erro ao inserir Conservante: {e}')
+    #
+    # try:
+    #     Conservante.insertConservante(nome='Benzoato de Sódio',
+    #                                   descricao='Utilizado para conservar alimentos. '
+    #                                             'É útil para conservar alimentos ácidos, '
+    #                                             'como sucos de frutas.')
+    # except Exception as e:
+    #     print(f'Erro ao inserir Conservante: {e}')
+
+    conservante = Conservante.updateConservante(id_conservante=1999,
+                                                nome='',
+                                                descricao='Utilizado para conservar alimentos. '
+                                                          'Evita a proliferação de fungos e leveduras.'
+                                                          ' Conservante muito utilizado na indústria alimentícia.'
+                                                )
+    print(conservante)

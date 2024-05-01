@@ -144,22 +144,85 @@ class TipoEmbalagem(ModelBase):
         except Exception as exc:
             raise Exception(f'Erro inesperado ao selecionar TipoEmbalagem por nome: {exc}')
 
+    
+    @staticmethod
+    def updateTipoEmbalagem(id_tipo_embalagem: int, nome: str = '') -> 'TipoEmbalagem':
+        """Atualiza um TipoEmbalagem na tabela tipo_embalagaem
+        :param id_tipo_embalagem: int: id do tipo_embalagaem
+        :param nome: str: nome do tipo_embalagaem
+        :return: TipoEmbalagem: Retorna o objeto TipoEmbalagem se atualizado com sucesso, None caso contrário
+        :raises TypeError: Se o id_tipo_embalagaem não for inteiro
+        :raises TyperError: Se o nome não for string
+        :raises ValueError: Se o nome não for informado ou for composto só por espaços
+        :raises RuntimeError: Se ocorrer um erro de integridade ao atualizar o TipoEmbalagem, especificado para o nome. Caso
+        seja por outro motivo, será lançado um erro genérico.
+        """
 
+        try:
+            # check if is integer
+            if not isinstance(id_tipo_embalagem, int):
+                raise TypeError('id do TipoEmbalagem deve ser um inteiro!')
+
+            if not isinstance(nome, str):
+                raise TypeError('nome do TipoEmbalagem deve ser uma string!')
+
+            # check if is string
+            if len(nome) > 0 and all(caractere.isspace() for caractere in nome):
+                raise ValueError('nome do TipoEmbalagem não pode ser composto só por espaços!')
+
+            nome = nome.strip().upper()
+
+            with createSession() as session:
+                tipo_embalagaem = session.query(TipoEmbalagem).filter_by(id=id_tipo_embalagem).first()
+
+                if not tipo_embalagaem:
+                    raise ValueError(f'TipoEmbalagem com id={id_tipo_embalagem} não cadastrado na base!')
+
+                if nome:
+                    tipo_embalagaem.nome = nome
+                else:
+                    nome = tipo_embalagaem.nome
+
+                tipo_embalagaem.data_atualizacao = datetime.now()
+                session.commit()
+                return tipo_embalagaem
+
+        except IntegrityError as intg_error:
+            if 'UNIQUE constraint failed' in str(intg_error):
+                if 'tipo_embalagem.nome' in str(intg_error):
+                    raise RuntimeError(f"Já existe um TipoEmbalagem com o nome '{nome}' cadastrado. "
+                                       f"O nome deve ser único.")
+            else:
+                # Tratar outros erros de integridade do SQLAlchemy
+                raise RuntimeError(f'Erro de integridade ao inserir TipoEmbalagem: {intg_error}')
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except Exception as exp:
+            raise Exception(f'Erro inesperado ao atualizar TipoEmbalagem: {exp}')
+        
+        
 if __name__ == '__main__':
-    try:
-        TipoEmbalagem.insertTipoEmbalagem(nome='Pote')
-    except Exception as e:
-        print(f'Erro ao inserir TipoEmbalagem: {e}')
+    # try:
+    #     TipoEmbalagem.insertTipoEmbalagem(nome='Pote')
+    # except Exception as e:
+    #     print(f'Erro ao inserir TipoEmbalagem: {e}')
+    #
+    # try:
+    #     TipoEmbalagem.insertTipoEmbalagem(nome='Pote')
+    # except Exception as e:
+    #     print(f'Erro ao inserir TipoEmbalagem: {e}')
+    #
+    # try:
+    #     TipoEmbalagem.insertTipoEmbalagem(nome='Caixa')
+    # except Exception as e:
+    #     print(f'Erro ao inserir TipoEmbalagem: {e}')
 
-    try:
-        TipoEmbalagem.insertTipoEmbalagem(nome='Pote')
-    except Exception as e:
-        print(f'Erro ao inserir TipoEmbalagem: {e}')
+    tipo_embalagen = TipoEmbalagem.updateTipoEmbalagem(id_tipo_embalagem=4532,
+                                                       nome='Pote')
 
-    try:
-        TipoEmbalagem.insertTipoEmbalagem(nome='Caixa')
-    except Exception as e:
-        print(f'Erro ao inserir TipoEmbalagem: {e}')
-
-
-    print('fim')
+    print(tipo_embalagen)

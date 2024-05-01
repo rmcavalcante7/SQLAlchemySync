@@ -1,3 +1,5 @@
+from typing import Union
+
 import sqlalchemy as sa
 import sqlalchemy.orm as orm
 from datetime import datetime
@@ -158,8 +160,72 @@ class Lote(ModelBase):
             print(f'Erro ao selecionar Lote: {exc}')
 
 
+    @staticmethod
+    def updateLote(id_lote: int, picole_fk: Union[int, None], quantidade: Union[int, None]) -> 'Lote':
+        """Atualiza um Lote na tabela lote
+        :param id_lote: int: id do lote
+        :param picole_fk: int: id do picolé
+        :param quantidade: int: quantidade de picolés do lote
+        :return: Lote: Retorna o objeto Lote se atualizado com sucesso
+        :raises TypeError: Se o id, picole_fk ou quantidade não for um inteiro
+        :raises ValueError: Se o id, picole_fk ou quantidade não for informado
+        :raises RuntimeError: Se ocorrer um erro de integridade ao atualizar o lote, especificado para o tipo_picole_fk. Caso
+        seja por outro motivo, será lançado um erro genérico.
+        """
+        try:
+            if not isinstance(id_lote, int):
+                raise TypeError('id_lote do Lote deve ser um inteiro!')
+
+            if not isinstance(picole_fk, int) and picole_fk is not None:
+                raise TypeError('picole_fk do Lote deve ser um inteiro ou não deve ser informado!')
+
+            if not isinstance(quantidade, int) and quantidade is not None:
+                raise TypeError('quantidade do Lote deve ser um inteiro ou não deve ser informado!')
+
+            if quantidade is not None and quantidade <= 0:
+                raise ValueError('quantidade de picolés do Lote deve ser maior que zero!')
+
+            with createSession() as session:
+                lote = session.query(Lote).filter_by(id=id_lote).first()
+
+                if not lote:
+                    raise ValueError(f'Ingrediente com id={id_lote} não cadastrado na base!')
+
+                if picole_fk:
+                    lote.picole_fk = picole_fk
+                else:
+                    picole_fk = lote.picole_fk
+
+                if quantidade:
+                    lote.quantidade = quantidade
+
+                session.commit()
+                return lote
+
+        except IntegrityError as intg_error:
+            if 'FOREIGN KEY constraint failed' in str(intg_error):
+                raise RuntimeError(f"Erro de integridade ao inserir Lote: {picole_fk=} "
+                                   f"não encontrado!")
+            else:
+                raise RuntimeError(f'Erro de integridade ao inserir Lote: {intg_error}')
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except Exception as exc:
+            raise Exception(f'Erro inesperado ao atualizar Lote: {exc}')
+
+
 if __name__ == '__main__':
-    try:
-        Lote.insertLote(picole_fk=1, quantidade=10)
-    except Exception as e:
-        print(f'Erro ao inserir Lote: {e}')
+    # try:
+    #     Lote.insertLote(picole_fk=1, quantidade=10)
+    # except Exception as e:
+    #     print(f'Erro ao inserir Lote: {e}')
+
+    lote = Lote.updateLote(id_lote=1,
+                           picole_fk=1,
+                           quantidade=0)
+    print(f'Lote atualizado: {lote}')

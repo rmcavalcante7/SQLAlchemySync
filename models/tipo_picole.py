@@ -120,10 +120,10 @@ class TipoPicole(ModelBase):
             print(f'Erro inesperado: {exc}')
 
     @staticmethod
-    def selectTipoPicolePorNome(nome: str) -> 'TipoPicole' or None:
+    def selectTipoPicolePorNome(nome: str) -> 'TipoPicole':
         """Seleciona um TipoPicole na tabela tipo_picole por nome
         :param nome: str: nome do TipoPicole a ser selecionado
-        :return: TipoPicole or None: Retorna o objeto TipoPicole se encontrado, None caso contrário
+        :return: TipoPicole: Retorna o objeto TipoPicole se encontrado, None caso contrário
         :raises TypeError: Se o nome não for uma string
         :raises ValueError: Se o nome não for informado
         :raises RuntimeError: Se ocorrer um erro de integridade ao selecionar o TipoPicole por nome. Caso seja por outro
@@ -155,20 +155,84 @@ class TipoPicole(ModelBase):
         except Exception as exc:
             print(f'Erro inesperado: {exc}')
 
+    @staticmethod
+    def updateTipoPicole(id_tipo_picole: int, nome: str = '') -> 'TipoPicole':
+        """Atualiza um TipoPicole na tabela tipo_picole
+        :param id_tipo_picole: int: id do tipo_picole
+        :param nome: str: nome do tipo_picole
+        :return: TipoPicole: Retorna o objeto TipoPicole se atualizado com sucesso, None caso contrário
+        :raises TypeError: Se o id_tipo_picole não for inteiro
+        :raises TyperError: Se o nome não for string
+        :raises ValueError: Se o nome não for informado ou for composto só por espaços
+        :raises RuntimeError: Se ocorrer um erro de integridade ao atualizar o TipoPicole, especificado para o nome. Caso
+        seja por outro motivo, será lançado um erro genérico.
+        """
+
+        try:
+            # check if is integer
+            if not isinstance(id_tipo_picole, int):
+                raise TypeError('id do TipoPicole deve ser um inteiro!')
+
+            if not isinstance(nome, str):
+                raise TypeError('nome do TipoPicole deve ser uma string!')
+
+            # check if is string
+            if len(nome) > 0 and all(caractere.isspace() for caractere in nome):
+                raise ValueError('nome do TipoPicole não pode ser composto só por espaços!')
+
+            nome = nome.strip().upper()
+
+            with createSession() as session:
+                tipo_picole = session.query(TipoPicole).filter_by(id=id_tipo_picole).first()
+
+                if not tipo_picole:
+                    raise ValueError(f'TipoPicole com id={id_tipo_picole} não cadastrado na base!')
+
+                if nome:
+                    tipo_picole.nome = nome
+                else:
+                    nome = tipo_picole.nome
+
+                tipo_picole.data_atualizacao = datetime.now()
+                session.commit()
+                return tipo_picole
+
+        except IntegrityError as intg_error:
+            if 'UNIQUE constraint failed' in str(intg_error):
+                if 'tipo_picole.nome' in str(intg_error):
+                    raise RuntimeError(f"Já existe um TipoPicole com o nome '{nome}' cadastrado. "
+                                       f"O nome deve ser único.")
+            else:
+                # Tratar outros erros de integridade do SQLAlchemy
+                raise RuntimeError(f'Erro de integridade ao inserir TipoPicole: {intg_error}')
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except Exception as exp:
+            raise Exception(f'Erro inesperado ao atualizar TipoPicole: {exp}')
+
 
 if __name__ == '__main__':
-    try:
-        TipoPicole.insertTipoPicole(nome='Cremoso')
-    except Exception as e:
-        print(f'Erro ao inserir TipoPicole: {e}')
+    # try:
+    #     TipoPicole.insertTipoPicole(nome='Cremoso')
+    # except Exception as e:
+    #     print(f'Erro ao inserir TipoPicole: {e}')
+    #
+    # try:
+    #     TipoPicole.insertTipoPicole(nome='Frutado')
+    # except Exception as e:
+    #     print(f'Erro ao inserir TipoPicole: {e}')
+    #
+    # try:
+    #     TipoPicole.insertTipoPicole(nome='Frutado')
+    # except Exception as e:
+    #     print(f'Erro ao inserir TipoPicole: {e}')
+    # print('fim')
 
-    try:
-        TipoPicole.insertTipoPicole(nome='Frutado')
-    except Exception as e:
-        print(f'Erro ao inserir TipoPicole: {e}')
-
-    try:
-        TipoPicole.insertTipoPicole(nome='Frutado')
-    except Exception as e:
-        print(f'Erro ao inserir TipoPicole: {e}')
-    print('fim')
+    tipo_picole = TipoPicole.updateTipoPicole(id_tipo_picole=2,
+                                              nome='Cremoso')
+    print(tipo_picole)

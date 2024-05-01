@@ -1,3 +1,5 @@
+from typing import Union
+
 import sqlalchemy as sa
 import sqlalchemy.orm as orm
 from datetime import datetime
@@ -70,7 +72,7 @@ class IngredientePicole(ModelBase):
                 session.add(ingrediente_picole)
                 session.commit()
 
-                print(f'Aditivo nutritivo inserido com sucesso!')
+                print(f'IngredientePicole inserido com sucesso!')
                 print(f'ID do IngredientePicole inserido: {ingrediente_picole.id}')
                 print(f'picole_fk do IngredientePicole inserido: {ingrediente_picole.picole_fk}')
                 print(f'picole.sabor do IngredientePicole inserido: {ingrediente_picole.picole.sabor}')
@@ -186,24 +188,99 @@ class IngredientePicole(ModelBase):
         except Exception as exc:
             raise Exception(f'Erro inesperado ao selecionar todos IngredientePicole: {exc}')
 
+    @staticmethod
+    def updateIngredientePicole(id_ing_picole: int,
+                                picole_fk: Union[int, None],
+                                ingrediente_fk: Union[int, None]) -> 'IngredientePicole':
+        """Atualiza um IngredientePicole na tabela ingrediente_picole
+        :param id_ing_picole: int: id do IngredientePicole
+        :param picole_fk: int: id do picolé
+        :param ingrediente_fk: int: id do ingrediente
+        :return: IngredientePicole: Retorna o objeto IngredientePicole atualizado
+        :raises TypeError: Se o id_ing_picole, picole_fk ou o ingrediente_fk não forem inteiros
+        :raises ValueError: Se o id_ing_picole, picole_fk ou o ingrediente_fk não forem informados
+        :raises RuntimeError: se as FKs picole_fk e ingrediente_fk não existirem retorna um erro de integridade, caso
+        contrário, retorna um erro genérico.
+        """
+
+        try:
+            if not isinstance(id_ing_picole, int):
+                raise TypeError('id_ing_picole do IngredientePicole deve ser um inteiro!')
+
+            if not isinstance(picole_fk, int) and picole_fk is not None:
+                raise TypeError('picole_fk do IngredientePicole deve ser um inteiro ou não deve ser informado!')
+
+            if not isinstance(ingrediente_fk, int) and ingrediente_fk is not None:
+                raise TypeError('ingrediente_fk do IngredientePicole deve ser um inteiro ou não deve ser informado!')
+
+            with createSession() as session:
+                ingrediente_picole = session.query(IngredientePicole). \
+                    filter_by(id=id_ing_picole).first()
+
+                if not ingrediente_picole:
+                    raise ValueError(f'IngredientePicole com id={id_ing_picole} não encontrado!')
+
+                if picole_fk:
+                    ingrediente_picole.picole_fk = picole_fk
+                else:
+                    picole_fk = ingrediente_picole.picole_fk
+
+                if ingrediente_fk:
+                    ingrediente_picole.ingrediente_fk = ingrediente_fk
+                else:
+                    ingrediente_fk = ingrediente_picole.ingrediente_fk
+
+                ingrediente_picole.ingrediente_picole = (f'{ingrediente_picole.ingrediente_fk}-'
+                                                         f'{ingrediente_picole.picole_fk}')
+                ingrediente_picole.data_atualizacao = datetime.now()
+                session.commit()
+                return ingrediente_picole
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except IntegrityError as intg_error:
+            if 'FOREIGN KEY constraint failed' in str(intg_error):
+                raise RuntimeError(f"Erro de integridade ao inserir IngredientePicole. "
+                                   f"Verifique se as FKs fornecidas existem: "
+                                   f"{picole_fk=} | {ingrediente_fk=}"
+                                   )
+            elif 'UNIQUE constraint failed' in str(intg_error):
+                raise RuntimeError(f"""Erro de integridade ao inserir IngredientePicole. 
+                Já existe um IngredientePicole com a mesma combinação de picole_fk e ingrediente_fk: {picole_fk=} | {ingrediente_fk=}
+                """)
+            else:
+                raise RuntimeError(f'Erro de integridade ao inserir Lote: {intg_error}')
+
+        except Exception as exc:
+            raise RuntimeError(f'Erro inesperado ao atualizar IngredientePicole: {exc}')
+
 
 if __name__ == '__main__':
-    try:
-        IngredientePicole.insertIngredientePicole(picole_fk=1, ingrediente_fk=1)
-    except Exception as e:
-        print(f'Erro ao inserir IngredientePicole: {e}')
+    # try:
+    #     IngredientePicole.insertIngredientePicole(picole_fk=1, ingrediente_fk=1)
+    # except Exception as e:
+    #     print(f'Erro ao inserir IngredientePicole: {e}')
+    #
+    # try:
+    #     IngredientePicole.insertIngredientePicole(picole_fk=1, ingrediente_fk=1)
+    # except Exception as e:
+    #     print(f'Erro ao inserir IngredientePicole: {e}')
+    #
+    # try:
+    #     IngredientePicole.insertIngredientePicole(picole_fk=1, ingrediente_fk=2)
+    # except Exception as e:
+    #     print(f'Erro ao inserir IngredientePicole: {e}')
+    #
+    # try:
+    #     IngredientePicole.insertIngredientePicole(picole_fk=100, ingrediente_fk=100)
+    # except Exception as e:
+    #     print(f'Erro ao inserir IngredientePicole: {e}')
 
-    try:
-        IngredientePicole.insertIngredientePicole(picole_fk=1, ingrediente_fk=1)
-    except Exception as e:
-        print(f'Erro ao inserir IngredientePicole: {e}')
-
-    try:
-        IngredientePicole.insertIngredientePicole(picole_fk=1, ingrediente_fk=2)
-    except Exception as e:
-        print(f'Erro ao inserir IngredientePicole: {e}')
-
-    try:
-        IngredientePicole.insertIngredientePicole(picole_fk=100, ingrediente_fk=100)
-    except Exception as e:
-        print(f'Erro ao inserir IngredientePicole: {e}')
+    ingredientes_picole = IngredientePicole.updateIngredientePicole(id_ing_picole=1234,
+                                                                    picole_fk='None',
+                                                                    ingrediente_fk=3)
+    print(ingredientes_picole)

@@ -1,3 +1,5 @@
+from typing import Union
+
 import sqlalchemy as sa
 import sqlalchemy.orm as orm
 from datetime import datetime
@@ -39,7 +41,6 @@ class LoteNotaFiscal(ModelBase):
     def __repr__(self):
         return f'LoteNotaFiscal(id={self.id}, lote_fk={self.lote_fk}, nota_fiscal_fk={self.nota_fiscal_fk})'
 
-
     @staticmethod
     def insertLoteNotaFiscal(nota_fiscal_fk: int, lote_fk: int) -> 'LoteNotaFiscal' or None:
         """Insere um LoteNotaFiscal na tabela lote_nota_fiscal
@@ -72,7 +73,8 @@ class LoteNotaFiscal(ModelBase):
                 print(f'Lote Nota Fiscal inserido com sucesso!')
                 print(f'ID do LoteNotaFiscal inserido: {lote_nota_fiscal.id}')
                 print(f'nota_fiscal_fk do LoteNotaFiscal inserido: {lote_nota_fiscal.nota_fiscal_fk}')
-                print(f'nota_fiscal.numero_serie LoteNotaFiscal inserido: {str(lote_nota_fiscal.nota_fiscal.numero_serie)}')
+                print(
+                    f'nota_fiscal.numero_serie LoteNotaFiscal inserido: {str(lote_nota_fiscal.nota_fiscal.numero_serie)}')
                 print(f'lote_fk do LoteNotaFiscal inserido: {lote_nota_fiscal.lote_fk}')
                 print(f'lote.quantidade do LoteNotaFiscal inserido: {lote_nota_fiscal.lote.quantidade}')
             return lote_nota_fiscal
@@ -88,7 +90,7 @@ class LoteNotaFiscal(ModelBase):
                                    )
 
             else:
-                raise RuntimeError(f'Erro de integridade ao inserir Lote: {intg_error}')
+                raise RuntimeError(f'Erro de integridade ao inserir LoteNotaFiscal: {intg_error}')
 
         except TypeError as te:
             raise TypeError(te)
@@ -154,7 +156,8 @@ class LoteNotaFiscal(ModelBase):
                 raise ValueError('nota_fiscal_fk do LoteNotaFiscal não foi informado!')
 
             with createSession() as session:
-                lote_nota_fiscal = session.query(LoteNotaFiscal).filter(LoteNotaFiscal.nota_fiscal_fk == nota_fiscal_fk).all()
+                lote_nota_fiscal = session.query(LoteNotaFiscal).filter(
+                    LoteNotaFiscal.nota_fiscal_fk == nota_fiscal_fk).all()
                 return lote_nota_fiscal
 
         except TypeError as te:
@@ -192,6 +195,77 @@ class LoteNotaFiscal(ModelBase):
 
         except Exception as exc:
             raise Exception(f'Erro inesperado ao selecionar LoteNotaFiscal por lote_fk: {exc}')
+
+    @staticmethod
+    def updateLoteNotaFiscal(id_lote_nf: int,
+                             lote_fk: Union[int, None],
+                             nota_fiscal_fk: Union[int, None]) -> 'LoteNotaFiscal':
+        """Atualiza um LoteNotaFiscal na tabela lote_nota_fiscal
+        :param id_lote_nf: int: id do LoteNotaFiscal
+        :param lote_fk: int: id do lote
+        :param nota_fiscal_fk: int: id da nota fiscal
+        :return: LoteNotaFiscal: Retorna o objeto LoteNotaFiscal atualizado
+        :raises TypeError: Se o id_lote_nf, lote_fk ou o nota_fiscal_fk não forem inteiros
+        :raises ValueError: Se o id_lote_nf, lote_fk ou o nota_fiscal_fk não forem informados
+        :raises RuntimeError: se as FKs lote_fk e nota_fiscal_fk não existirem retorna um erro de integridade, caso
+        contrário, retorna um erro genérico.
+        """
+
+        try:
+            if not isinstance(id_lote_nf, int):
+                raise TypeError('id_lote_nf do LoteNotaFiscal deve ser um inteiro!')
+
+            if not isinstance(lote_fk, int) and lote_fk is not None:
+                raise TypeError('lote_fk do LoteNotaFiscal deve ser um inteiro ou não deve ser informado!')
+
+            if not isinstance(nota_fiscal_fk, int) and nota_fiscal_fk is not None:
+                raise TypeError(
+                    'nota_fiscal_fk do LoteNotaFiscal deve ser um inteiro ou não deve ser informado!')
+
+            with createSession() as session:
+                lote_nota_fiscal = session.query(LoteNotaFiscal). \
+                    filter_by(id=id_lote_nf).first()
+
+                if not lote_nota_fiscal:
+                    raise ValueError(f'LoteNotaFiscal com id={id_lote_nf} não encontrado!')
+
+                if lote_fk:
+                    lote_nota_fiscal.lote_fk = lote_fk
+                else:
+                    lote_fk = lote_nota_fiscal.lote_fk
+
+                if nota_fiscal_fk:
+                    lote_nota_fiscal.nota_fiscal_fk = nota_fiscal_fk
+                else:
+                    nota_fiscal_fk = lote_nota_fiscal.nota_fiscal_fk
+
+                lote_nota_fiscal.picole_aditivo_nutritivo = (f'{lote_nota_fiscal.lote_fk}-'
+                                                             f'{lote_nota_fiscal.nota_fiscal_fk}')
+                lote_nota_fiscal.data_atualizacao = datetime.now()
+                session.commit()
+                return lote_nota_fiscal
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except IntegrityError as intg_error:
+            if 'FOREIGN KEY constraint failed' in str(intg_error):
+                raise RuntimeError(f"""Erro de integridade ao inserir LoteNotaFiscal. 
+                Verifique se as FKs fornecidas existem: {nota_fiscal_fk=} | {lote_fk=}"""
+                                   )
+            elif 'UNIQUE constraint failed' in str(intg_error):
+                raise RuntimeError(f"""Erro de integridade ao inserir LoteNotaFiscal. 
+                Já existe um LoteNotaFiscal com a mesma combinação de lote e nota fiscal: {nota_fiscal_fk=} | {lote_fk=}"""
+                                   )
+
+            else:
+                raise RuntimeError(f'Erro de integridade ao inserir LoteNotaFiscal: {intg_error}')
+
+        except Exception as exc:
+            raise RuntimeError(f'Erro inesperado ao atualizar LoteNotaFiscal: {exc}')
 
 
 if __name__ == '__main__':

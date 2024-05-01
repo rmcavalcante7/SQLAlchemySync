@@ -143,21 +143,85 @@ class Sabor(ModelBase):
         except Exception as exc:
             raise Exception(f'Erro inesperado ao selecionar Sabor por nome: {exc}')
 
+    @staticmethod
+    def updateSabor(id_sabor: int, nome: str = '') -> 'Sabor':
+        """Atualiza um Sabor na tabela sabor
+        :param id_sabor: int: id do Sabor
+        :param nome: str: nome do Sabor
+        :return: Sabor: Retorna o objeto Sabor atualizado
+        :raises TypeError: Se o id_sabor não for inteiro
+        :raises TyperError: Se o nome não for string
+        :raises ValueError: Se o nome não for informado ou for composto só por espaços
+        :raises RuntimeError: Se ocorrer um erro de integridade ao atualizar o sabor, especificado para o nome. Caso
+        seja por outro motivo, será lançado um erro genérico.
+        """
+
+        try:
+            # check if is int
+            if not isinstance(id_sabor, int):
+                raise TypeError('id do Sabor deve ser um inteiro!')
+
+            # check if is string
+            if not isinstance(nome, str):
+                raise TypeError('nome do Sabor deve ser uma string!')
+
+            if len(nome) > 0 and all(caractere.isspace() for caractere in nome):
+                raise ValueError('nome do Sabor não pode ser composto só por espaços!')
+
+            nome = nome.strip().upper()
+
+            with createSession() as session:
+                sabor = session.query(Sabor).filter_by(id=id_sabor).first()
+
+                if not sabor:
+                    raise ValueError(f'Sabor com o ID {id_sabor} não cadastrado na base!')
+
+                if nome:
+                    sabor.nome = nome
+                else:
+                    nome = sabor.nome
+
+                sabor.data_atualizacao = datetime.now()
+                session.commit()
+                return sabor
+
+        except IntegrityError as intg_error:
+            if 'UNIQUE constraint failed' in str(intg_error):
+                if 'sabor.nome' in str(intg_error):
+                    raise RuntimeError(f"Já existe um Sabor com o nome '{nome}' cadastrado. "
+                                       f"O nome deve ser único.")
+            else:
+                # Tratar outros erros de integridade do SQLAlchemy
+                raise RuntimeError(f'Erro de integridade ao inserir sabor: {intg_error}')
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except Exception as exc:
+            raise Exception(f'Erro inesperado ao atualizar Sabor: {exc}')
+
 
 if __name__ == '__main__':
-    try:
-        Sabor.insertSabor(nome='Morango')
-    except Exception as e:
-        print(f'Erro ao inserir Sabor: {e}')
+    # try:
+    #     Sabor.insertSabor(nome='Morango')
+    # except Exception as e:
+    #     print(f'Erro ao inserir Sabor: {e}')
+    #
+    # try:
+    #     Sabor.insertSabor(nome='Morango')
+    # except Exception as e:
+    #     print(f'Erro ao inserir Sabor: {e}')
+    #
+    # try:
+    #     Sabor.insertSabor(nome='Coco')
+    # except Exception as e:
+    #     print(f'Erro ao inserir Sabor: {e}')
+    #
+    # print('fim')
 
-    try:
-        Sabor.insertSabor(nome='Morango')
-    except Exception as e:
-        print(f'Erro ao inserir Sabor: {e}')
-
-    try:
-        Sabor.insertSabor(nome='Coco')
-    except Exception as e:
-        print(f'Erro ao inserir Sabor: {e}')
-
-    print('fim')
+    sabor = Sabor.updateSabor(id_sabor=2,
+                              nome='  ')
+    print(sabor)
