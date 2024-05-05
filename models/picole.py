@@ -9,6 +9,7 @@ from models.tipo_picole import TipoPicole
 from models.tipo_embalagem import TipoEmbalagem
 from conf.db_session import createSession
 from sqlalchemy.exc import IntegrityError
+from ScriptsAuxiliares.DataBaseFeatures import DataBaseFeatures
 
 
 class Picole(ModelBase):
@@ -339,19 +340,69 @@ class Picole(ModelBase):
         except Exception as exc:
             raise Exception(f'Erro inesperado ao atualizar Lote: {exc}')
 
+    @staticmethod
+    def deletePicoleById(id_picole: int) -> 'Picole':
+        """Deleta um Picole cadastrado no banco de dados a partir do id.
+        :param id_picole: int: identificador do Picole
+        :return: Picole: Retorna o objeto Picole deletado
+        :raises TypeError: Se o id_picole não for um inteiro
+        :raises RuntimeError: Se ocorrer um erro de integridade ao deletar o Picole, especificado para o
+        id_picole, caso o Picole esteja associado a um ou mais alimentos em outras tabelas. Caso seja por outro
+        motivo, será lançado um erro genérico.
+        :raises ValueError: Se o Picole não for encontrado na base
+        """
+        try:
+            if not isinstance(id_picole, int):
+                raise TypeError('id_picole do Picole deve ser um inteiro!')
+
+            with createSession() as session:
+                picole: Picole = session.query(Picole). \
+                    filter_by(id=id_picole).first()
+
+                if not picole:
+                    raise ValueError(f'Picole com id={id_picole} não cadastrado na base!')
+
+                session.delete(picole)
+                session.commit()
+                return picole
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except IntegrityError as intg_error:
+            if 'FOREIGN KEY constraint failed' in str(intg_error):
+                tabelas = DataBaseFeatures.findTabelsWithFkTo(table_name=Picole.__tablename__)
+                raise RuntimeError(f'Picole com id={id_picole} não pode ser deletado, '
+                                   f'pois pode está associado a um ou mais elementos na(s) tabela(s): {tabelas}')
+            else:
+                # Tratar outros erros de integridade do SQLAlchemy
+                raise RuntimeError(f'Erro de integridade ao deletar Picole: {intg_error}')
+
+        except Exception as exc:
+            raise Exception(f'Erro inesperado ao deletar Picole: {exc}')
+
 
 if __name__ == '__main__':
-    try:
-        Picole.insertPicole(preco=1.5, sabor_fk=1, tipo_embalagem_fk=1, tipo_picole_fk=1)
-    except Exception as e:
-        print(f'Erro ao inserir Picole: {e}')
+    # try:
+    #     Picole.insertPicole(preco=1.5, sabor_fk=1, tipo_embalagem_fk=1, tipo_picole_fk=1)
+    # except Exception as e:
+    #     print(f'Erro ao inserir Picole: {e}')
+    #
+    # try:
+    #     Picole.insertPicole(preco=1.5, sabor_fk=1, tipo_embalagem_fk=1, tipo_picole_fk=1)
+    # except Exception as e:
+    #     print(f'Erro ao inserir Picole: {e}')
+    #
+    # try:
+    #     Picole.insertPicole(preco=1.5, sabor_fk=1, tipo_embalagem_fk=1, tipo_picole_fk=2)
+    # except Exception as e:
+    #     print(f'Erro ao inserir Picole: {e}')
 
     try:
-        Picole.insertPicole(preco=1.5, sabor_fk=1, tipo_embalagem_fk=1, tipo_picole_fk=1)
+        picole = Picole.deletePicoleById(id_picole=133)
+        print(f'Picole deletado: {picole}')
     except Exception as e:
-        print(f'Erro ao inserir Picole: {e}')
-
-    try:
-        Picole.insertPicole(preco=1.5, sabor_fk=1, tipo_embalagem_fk=1, tipo_picole_fk=2)
-    except Exception as e:
-        print(f'Erro ao inserir Picole: {e}')
+        print(f'Erro ao deletar Picole: {e}')

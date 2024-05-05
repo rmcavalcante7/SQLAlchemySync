@@ -3,6 +3,8 @@ from datetime import datetime
 from models.model_base import ModelBase
 from conf.db_session import createSession
 from sqlalchemy.exc import IntegrityError
+from ScriptsAuxiliares.DataBaseFeatures import DataBaseFeatures
+
 
 
 class Sabor(ModelBase):
@@ -23,7 +25,7 @@ class Sabor(ModelBase):
     @staticmethod
     def insertSabor(nome: str) -> 'Sabor' or None:
         """Insere um Sabor na tabela sabor
-        :param nome: str: nome do aditivo
+        :param nome: str: nome do Sabor
         :return: Sabor or None: Retorna o objeto Sabor se inserido com sucesso, None caso contrário
         :raises TypeError: Se o nome não for string
         :raises ValueError: Se o nome não for informado
@@ -203,6 +205,50 @@ class Sabor(ModelBase):
         except Exception as exc:
             raise Exception(f'Erro inesperado ao atualizar Sabor: {exc}')
 
+    @staticmethod
+    def deleteSaborById(id_sabor: int) -> 'Sabor':
+        """Deleta um Sabor cadastrado no banco de dados a partir do id.
+        :param id_sabor: int: identificador do Sabor
+        :return: Sabor: Retorna o objeto Sabor deletado
+        :raises TypeError: Se o id_sabor não for um inteiro
+        :raises RuntimeError: Se ocorrer um erro de integridade ao deletar o Sabor, especificado para o
+        id_sabor, caso o Sabor esteja associado a um ou mais alimentos em outras tabelas. Caso seja por outro
+        motivo, será lançado um erro genérico.
+        :raises ValueError: Se o Sabor não for encontrado na base
+        """
+        try:
+            if not isinstance(id_sabor, int):
+                raise TypeError('id_sabor do Sabor deve ser um inteiro!')
+
+            with createSession() as session:
+                sabor: Sabor = session.query(Sabor). \
+                    filter_by(id=id_sabor).first()
+
+                if not sabor:
+                    raise ValueError(f'Sabor com id={id_sabor} não cadastrado na base!')
+
+                session.delete(sabor)
+                session.commit()
+                return sabor
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except IntegrityError as intg_error:
+            if 'FOREIGN KEY constraint failed' in str(intg_error):
+                tabelas = DataBaseFeatures.findTabelsWithFkTo(table_name=Sabor.__tablename__)
+                raise RuntimeError(f'Sabor com id={id_sabor} não pode ser deletado, '
+                                   f'pois pode está associado a um ou mais elementos na(s) tabela(s): {tabelas}')
+            else:
+                # Tratar outros erros de integridade do SQLAlchemy
+                raise RuntimeError(f'Erro de integridade ao deletar Sabor: {intg_error}')
+
+        except Exception as exc:
+            raise Exception(f'Erro inesperado ao deletar Sabor: {exc}')
+
 
 if __name__ == '__main__':
     # try:
@@ -222,6 +268,14 @@ if __name__ == '__main__':
     #
     # print('fim')
 
-    sabor = Sabor.updateSabor(id_sabor=2,
-                              nome='  ')
-    print(sabor)
+    # sabor = Sabor.updateSabor(id_sabor=2,
+    #                           nome='  ')
+    # print(sabor)
+    
+    try:
+        sabor = Sabor.deleteSaborById(id_sabor=90)
+        print(sabor)
+    except Exception as e:
+        print(f'Erro ao deletar Sabor: {e}')
+
+        

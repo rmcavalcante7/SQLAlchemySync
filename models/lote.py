@@ -1,12 +1,12 @@
 from typing import Union
-
 import sqlalchemy as sa
 import sqlalchemy.orm as orm
 from datetime import datetime
 from models.model_base import ModelBase
-from models.tipo_picole import TipoPicole
+from models.picole import Picole
 from sqlalchemy.exc import NoForeignKeysError, IntegrityError
 from conf.db_session import createSession
+from ScriptsAuxiliares.DataBaseFeatures import DataBaseFeatures
 
 
 class Lote(ModelBase):
@@ -20,7 +20,7 @@ class Lote(ModelBase):
     # criando orm.relationship para acessar os dados da tabela relacionada,
     # é sempre necessário fazer essa configuração ao se ter uma chave estrangeira
     # permite acessar as informações da tabela relacionada, sem a necessidade de fazer uma nova consulta
-    picole: TipoPicole = orm.relationship('Picole', lazy='joined')
+    picole: Picole = orm.relationship('Picole', lazy='joined')
 
     quantidade: int = sa.Column(sa.BigInteger, nullable=False)
     data_criacao: datetime = sa.Column(sa.DateTime, nullable=False, default=datetime.now)
@@ -29,7 +29,7 @@ class Lote(ModelBase):
 
     def __repr__(self):
         """Retorna uma representação do objeto em forma de 'string'."""
-        return f'<Lote (picole_fk={self.tipo_picole_fk}, quantidade={self.quantidade})>'
+        return (f'<Lote (picole_fk={self.picole_fk}, quantidade={self.quantidade})>')
 
 
     @staticmethod
@@ -39,7 +39,7 @@ class Lote(ModelBase):
         :param quantidade: int: quantidade de picolés do lote
         :return: Lote or None: Retorna o objeto Lote se inserido com sucesso, None caso contrário
         :raises TypeError: Se o nome ou não for strings
-        :raises RuntimeError: Se ocorrer um erro de integridade ao inserir o lote, especificado para o tipo_picole_fk. Caso
+        :raises RuntimeError: Se ocorrer um erro de integridade ao inserir o lote, especificado para o picole_fk. Caso
         seja por outro motivo, será lançado um erro genérico.
         """
 
@@ -64,7 +64,7 @@ class Lote(ModelBase):
 
                 print(f'Lote inserido com sucesso!')
                 print(f'ID do Lote inserido: {lote.id}')
-                print(f'Nome do Tipo de picolé do Lote inserido: {lote.tipo_picole}')
+                print(f'Sabor do Picole inserido no Lote inserido: {lote.picole.sabor.nome}')
                 print(f'Quantidade de picolé do Lote inserido: {lote.quantidade}')
                 return lote
 
@@ -169,7 +169,7 @@ class Lote(ModelBase):
         :return: Lote: Retorna o objeto Lote se atualizado com sucesso
         :raises TypeError: Se o id, picole_fk ou quantidade não for um inteiro
         :raises ValueError: Se o id, picole_fk ou quantidade não for informado
-        :raises RuntimeError: Se ocorrer um erro de integridade ao atualizar o lote, especificado para o tipo_picole_fk. Caso
+        :raises RuntimeError: Se ocorrer um erro de integridade ao atualizar o lote, especificado para o picole_fk. Caso
         seja por outro motivo, será lançado um erro genérico.
         """
         try:
@@ -189,7 +189,7 @@ class Lote(ModelBase):
                 lote = session.query(Lote).filter_by(id=id_lote).first()
 
                 if not lote:
-                    raise ValueError(f'Ingrediente com id={id_lote} não cadastrado na base!')
+                    raise ValueError(f'Lote com id={id_lote} não cadastrado na base!')
 
                 if picole_fk:
                     lote.picole_fk = picole_fk
@@ -218,6 +218,51 @@ class Lote(ModelBase):
         except Exception as exc:
             raise Exception(f'Erro inesperado ao atualizar Lote: {exc}')
 
+    @staticmethod
+    def deleteLoteById(id_lote: int) -> 'Lote':
+        """Deleta um Lote cadastrado no banco de dados a partir do id.
+        :param id_lote: int: identificador do Lote
+        :return: Lote: Retorna o objeto Lote deletado
+        :raises TypeError: Se o id não for um inteiro
+        :raises RuntimeError: Se ocorrer um erro de integridade ao deletar o Lote, especificado para o
+        id, caso o Lote esteja associado a um ou mais alimentos em outras tabelas. Caso seja por outro
+        motivo, será lançado um erro genérico.
+        :raises ValueError: Se o Lote não for encontrado na base
+        """
+        try:
+            if not isinstance(id_lote, int):
+                raise TypeError('id do Lote deve ser um inteiro!')
+
+            with createSession() as session:
+                lote: Lote = session.query(Lote). \
+                    filter_by(id=id_lote).first()
+
+                if not lote:
+                    raise ValueError(f'Lote com id={id_lote} não cadastrado na base!')
+
+                session.delete(lote)
+                session.commit()
+                return lote
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except IntegrityError as intg_error:
+            if 'FOREIGN KEY constraint failed' in str(intg_error):
+                tabelas = DataBaseFeatures.findTabelsWithFkTo(table_name=Lote.__tablename__)
+                raise RuntimeError(f'Lote com id={id_lote} não pode ser deletado, '
+                                   f'pois pode está associado a um ou mais elementos na(s) tabela(s): {tabelas}')
+            else:
+                # Tratar outros erros de integridade do SQLAlchemy
+                raise RuntimeError(f'Erro de integridade ao deletar Lote: {intg_error}')
+
+        except Exception as exc:
+            raise Exception(f'Erro inesperado ao deletar Lote: {exc}')
+
+
 
 if __name__ == '__main__':
     # try:
@@ -225,7 +270,13 @@ if __name__ == '__main__':
     # except Exception as e:
     #     print(f'Erro ao inserir Lote: {e}')
 
-    lote = Lote.updateLote(id_lote=1,
-                           picole_fk=1,
-                           quantidade=0)
-    print(f'Lote atualizado: {lote}')
+    # lote = Lote.updateLote(id_lote=1,
+    #                        picole_fk=1,
+    #                        quantidade=0)
+    # print(f'Lote atualizado: {lote}')
+
+    try:
+        lote = Lote.deleteLoteById(id_lote=12)
+        print(f'Lote deletado: {lote}')
+    except Exception as e:
+        print(f'Erro ao deletar Lote: {e}')

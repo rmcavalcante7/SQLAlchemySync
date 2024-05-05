@@ -73,7 +73,7 @@ class ConservantePicole(ModelBase):
                 session.add(conservante_picole)
                 session.commit()
 
-                print(f'Aditivo nutritivo inserido com sucesso!')
+                print(f'ConservantePicole inserido com sucesso!')
                 print(f'ID do ConservantePicole inserido: {conservante_picole.id}')
                 print(f'picole_fk do ConservantePicole inserido: {conservante_picole.picole_fk}')
                 print(f'picole.sabor do ConservantePicole inserido: {conservante_picole.picole.sabor}')
@@ -215,7 +215,7 @@ class ConservantePicole(ModelBase):
            """
         try:
             if not isinstance(id_cons_picole, int):
-                raise TypeError('id_adit_nut_picole do ConservantePicole deve ser um inteiro!')
+                raise TypeError('id_cons_picole do ConservantePicole deve ser um inteiro!')
 
             if not isinstance(picole_fk, int) and picole_fk is not None:
                 raise TypeError('picole_fk do ConservantePicole deve ser um inteiro ou não deve ser informado!')
@@ -270,6 +270,38 @@ class ConservantePicole(ModelBase):
         except Exception as exc:
             raise RuntimeError(f'Erro inesperado ao atualizar ConservantePicole: {exc}')
 
+    @staticmethod
+    def deleteConservantePicoleById(id_cons_picole: int) -> 'ConservantePicole':
+        """Deleta um ConservantePicole na tabela conservante_picole
+        :param id_cons_picole: int: id do ConservantePicole
+        :raises TypeError: Se o id_cons_picole não for um inteiro
+        :raises ValueError: Se o ConservantePicole não for encontrado
+        :raises RuntimeError: Se ocorrer um erro ao deletar o ConservantePicole
+        """
+
+        try:
+            if not isinstance(id_cons_picole, int):
+                raise TypeError('id_cons_picole do ConservantePicole deve ser um inteiro!')
+
+            with createSession() as session:
+                conservante_picole = session.query(ConservantePicole).filter_by(
+                    id=id_cons_picole).first()
+                if not conservante_picole:
+                    raise ValueError(f'ConservantePicole com id={id_cons_picole} não encontrado!')
+
+                session.delete(conservante_picole)
+                session.commit()
+                return conservante_picole
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except Exception as exc:
+            raise RuntimeError(f'Erro inesperado ao deletar ConservantePicole: {exc}')
+
 
 if __name__ == '__main__':
     # try:
@@ -292,8 +324,15 @@ if __name__ == '__main__':
     # except Exception as e:
     #     print(f'Erro ao inserir ConservantePicole: {e}')
 
-    conser_picole = ConservantePicole.updateConservantePicole(id_cons_picole=1999,
-                                                              picole_fk=1999,
-                                                              conservante_fk=3
-                                                              )
-    print(conser_picole)
+    # conser_picole = ConservantePicole.updateConservantePicole(id_cons_picole=1999,
+    #                                                           picole_fk=1999,
+    #                                                           conservante_fk=3
+    #                                                           )
+    # print(conser_picole)
+
+    try:
+        conser_picole = ConservantePicole.deleteConservantePicoleById(id_cons_picole='9')
+        print(conser_picole)
+    except Exception as e:
+        print(f'Erro ao deletar ConservantePicole: {e}')
+

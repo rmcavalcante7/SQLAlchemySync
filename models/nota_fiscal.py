@@ -3,10 +3,11 @@ import sqlalchemy.orm as orm
 from datetime import datetime
 from models.model_base import ModelBase
 from models.revendedor import Revendedor
-from models.lote import Lote
 from typing import List, Union
 from conf.db_session import createSession
 from sqlalchemy.exc import IntegrityError
+from ScriptsAuxiliares.DataBaseFeatures import DataBaseFeatures
+
 
 
 class NotaFiscal(ModelBase):
@@ -303,21 +304,71 @@ class NotaFiscal(ModelBase):
         except Exception as exp:
             raise Exception(f'Erro inesperado ao atualizar Ingrediente: {exp}')
 
+    @staticmethod
+    def deleteNotaFiscalById(id_nota_fiscal: int) -> 'NotaFiscal':
+        """Deleta um NotaFiscal cadastrado no banco de dados a partir do id.
+        :param id_nota_fiscal: int: identificador do NotaFiscal
+        :return: NotaFiscal: Retorna o objeto NotaFiscal deletado
+        :raises TypeError: Se o id_nota_fiscal não for um inteiro
+        :raises RuntimeError: Se ocorrer um erro de integridade ao deletar o NotaFiscal, especificado para o
+        id_nota_fiscal, caso o NotaFiscal esteja associado a um ou mais alimentos em outras tabelas. Caso seja por outro
+        motivo, será lançado um erro genérico.
+        :raises ValueError: Se o NotaFiscal não for encontrado na base
+        """
+        try:
+            if not isinstance(id_nota_fiscal, int):
+                raise TypeError('id_nota_fiscal do NotaFiscal deve ser um inteiro!')
+
+            with createSession() as session:
+                inota_fiscal: NotaFiscal = session.query(NotaFiscal). \
+                    filter_by(id=id_nota_fiscal).first()
+
+                if not inota_fiscal:
+                    raise ValueError(f'NotaFiscal com id={id_nota_fiscal} não cadastrado na base!')
+
+                session.delete(inota_fiscal)
+                session.commit()
+                return inota_fiscal
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except IntegrityError as intg_error:
+            if 'FOREIGN KEY constraint failed' in str(intg_error):
+                tabelas = DataBaseFeatures.findTabelsWithFkTo(table_name=NotaFiscal.__tablename__)
+                raise RuntimeError(f'NotaFiscal com id={id_nota_fiscal} não pode ser deletado, '
+                                   f'pois pode está associado a um ou mais elementos na(s) tabela(s): {tabelas}')
+            else:
+                # Tratar outros erros de integridade do SQLAlchemy
+                raise RuntimeError(f'Erro de integridade ao deletar NotaFiscal: {intg_error}')
+
+        except Exception as exc:
+            raise Exception(f'Erro inesperado ao deletar NotaFiscal: {exc}')
+
 
 if __name__ == '__main__':
-    try:
-        NotaFiscal.insertNotaFiscal(valor=100.00, numero_serie='123456', descricao='Nota fiscal de teste', revendedor_fk=1)
-    except Exception as e:
-        print(f'Erro ao inserir Nota Fiscal: {e}')
+    # try:
+    #     NotaFiscal.insertNotaFiscal(valor=100.00, numero_serie='123456', descricao='Nota fiscal de teste', revendedor_fk=1)
+    # except Exception as e:
+    #     print(f'Erro ao inserir Nota Fiscal: {e}')
+    #
+    # # repetido
+    # try:
+    #     NotaFiscal.insertNotaFiscal(valor=100.00, numero_serie='123456', descricao='Nota fiscal de teste', revendedor_fk=1)
+    # except Exception as e:
+    #     print(f'Erro ao inserir Nota Fiscal: {e}')
+    #
+    # # revendedor_fk não existe
+    # try:
+    #     NotaFiscal.insertNotaFiscal(valor=100.00, numero_serie='1231457', descricao='Nota fiscal de teste', revendedor_fk=10)
+    # except Exception as e:
+    #     print(f'Erro ao inserir Nota Fiscal: {e}')
 
-    # repetido
     try:
-        NotaFiscal.insertNotaFiscal(valor=100.00, numero_serie='123456', descricao='Nota fiscal de teste', revendedor_fk=1)
+        nota_fiscal = NotaFiscal.deleteNotaFiscalById(id_nota_fiscal='201')
+        print(f'Nota Fiscal deletada: {nota_fiscal}')
     except Exception as e:
-        print(f'Erro ao inserir Nota Fiscal: {e}')
-
-    # revendedor_fk não existe
-    try:
-        NotaFiscal.insertNotaFiscal(valor=100.00, numero_serie='123457', descricao='Nota fiscal de teste', revendedor_fk=1000)
-    except Exception as e:
-        print(f'Erro ao inserir Nota Fiscal: {e}')
+        print(f'Erro ao deletar Nota Fiscal: {e}')

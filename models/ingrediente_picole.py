@@ -48,7 +48,7 @@ class IngredientePicole(ModelBase):
     def insertIngredientePicole(picole_fk: int, ingrediente_fk: int) -> 'IngredientePicole' or None:
         """Insere um IngredientePicole na tabela ingrediente_picole
         :param picole_fk: int: id do picolé
-        :param ingrediente_fk: int: id do conservante
+        :param ingrediente_fk: int: id do IngredientePicole
         :return: IngredientePicole or None: Retorna o objeto IngredientePicole se inserido com sucesso, None caso contrário
         :raises TypeError: Se o picole_fk ou o ingrediente_fk não forem inteiros
         :raises RuntimeError: Se as FKs picole_fk e ingrediente_fk não existirem retorna um erro de integridade, caso
@@ -258,6 +258,38 @@ class IngredientePicole(ModelBase):
         except Exception as exc:
             raise RuntimeError(f'Erro inesperado ao atualizar IngredientePicole: {exc}')
 
+    @staticmethod
+    def deleteIngredientePicoleById(id_ingr_picole: int) -> 'IngredientePicole':
+        """Deleta um IngredientePicole na tabela ingrediente_picole
+        :param id_ingr_picole: int: id do IngredientePicole
+        :raises TypeError: Se o id_ingr_picole não for um inteiro
+        :raises ValueError: Se o IngredientePicole não for encontrado
+        :raises RuntimeError: Se ocorrer um erro ao deletar o IngredientePicole
+        """
+
+        try:
+            if not isinstance(id_ingr_picole, int):
+                raise TypeError('id_ingr_picole do IngredientePicole deve ser um inteiro!')
+
+            with createSession() as session:
+                ingrediente_picole = session.query(IngredientePicole).filter_by(
+                    id=id_ingr_picole).first()
+                if not ingrediente_picole:
+                    raise ValueError(f'IngredientePicole com id={id_ingr_picole} não encontrado!')
+
+                session.delete(ingrediente_picole)
+                session.commit()
+                return ingrediente_picole
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except Exception as exc:
+            raise RuntimeError(f'Erro inesperado ao deletar IngredientePicole: {exc}')
+
 
 if __name__ == '__main__':
     # try:
@@ -280,7 +312,13 @@ if __name__ == '__main__':
     # except Exception as e:
     #     print(f'Erro ao inserir IngredientePicole: {e}')
 
-    ingredientes_picole = IngredientePicole.updateIngredientePicole(id_ing_picole=1234,
-                                                                    picole_fk='None',
-                                                                    ingrediente_fk=3)
-    print(ingredientes_picole)
+    # ingredientes_picole = IngredientePicole.updateIngredientePicole(id_ing_picole=1234,
+    #                                                                 picole_fk='None',
+    #                                                                 ingrediente_fk=3)
+    # print(ingredientes_picole)
+
+    try:
+        ingredientes_picole = IngredientePicole.deleteIngredientePicoleById(id_ingr_picole='1')
+        print(ingredientes_picole)
+    except Exception as e:
+        print(f'Erro ao deletar IngredientePicole: {e}')

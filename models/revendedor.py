@@ -3,6 +3,7 @@ from datetime import datetime
 from models.model_base import ModelBase
 from conf.db_session import createSession
 from sqlalchemy.exc import IntegrityError
+from ScriptsAuxiliares.DataBaseFeatures import DataBaseFeatures
 
 
 class Revendedor(ModelBase):
@@ -312,20 +313,71 @@ class Revendedor(ModelBase):
         except Exception as exp:
             raise Exception(f'Erro inesperado ao atualizar Ingrediente: {exp}')
 
+    @staticmethod
+    def deleteRevendedorById(id_revendedor: int) -> 'Revendedor':
+        """Deleta um Revendedor cadastrado no banco de dados a partir do id.
+        :param id_revendedor: int: identificador do Revendedor
+        :return: Revendedor: Retorna o objeto Revendedor deletado
+        :raises TypeError: Se o id_revendedor não for um inteiro
+        :raises RuntimeError: Se ocorrer um erro de integridade ao deletar o Revendedor, especificado para o
+        id_revendedor, caso o Revendedor esteja associado a um ou mais alimentos em outras tabelas. Caso seja por outro
+        motivo, será lançado um erro genérico.
+        :raises ValueError: Se o Revendedor não for encontrado na base
+        """
+        try:
+            if not isinstance(id_revendedor, int):
+                raise TypeError('id_revendedor do Revendedor deve ser um inteiro!')
 
+            with createSession() as session:
+                revendedor: Revendedor = session.query(Revendedor). \
+                    filter_by(id=id_revendedor).first()
+
+                if not revendedor:
+                    raise ValueError(f'Revendedor com id={id_revendedor} não cadastrado na base!')
+
+                session.delete(revendedor)
+                session.commit()
+                return revendedor
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except IntegrityError as intg_error:
+            if 'FOREIGN KEY constraint failed' in str(intg_error):
+                tabelas = DataBaseFeatures.findTabelsWithFkTo(table_name=Revendedor.__tablename__)
+                raise RuntimeError(f'Revendedor com id={id_revendedor} não pode ser deletado, '
+                                   f'pois pode está associado a um ou mais elementos na(s) tabela(s): {tabelas}')
+            else:
+                # Tratar outros erros de integridade do SQLAlchemy
+                raise RuntimeError(f'Erro de integridade ao deletar Revendedor: {intg_error}')
+
+        except Exception as exc:
+            raise Exception(f'Erro inesperado ao deletar Revendedor: {exc}')
+        
+        
 if __name__ == '__main__':
-    try:
-        Revendedor.insertRevendedor(nome='Sorbato de Potássio', cnpj='12345678901234',
-                                    razao_social='Sorbato de Potássio LTDA',
-                                    contato='Sorbato de Potássio')
-    except Exception as e:
-        print(f'Erro ao inserir Revendedor: {e}')
+    # try:
+    #     Revendedor.insertRevendedor(nome='Sorbato de Potássio', cnpj='12345678901234',
+    #                                 razao_social='Sorbato de Potássio LTDA',
+    #                                 contato='Sorbato de Potássio')
+    # except Exception as e:
+    #     print(f'Erro ao inserir Revendedor: {e}')
+    #
+    # try:
+    #     Revendedor.insertRevendedor(nome='Benzoato de Sódio', cnpj='12345678901234',
+    #                                 razao_social='Benzoato de Sódio LTDA',
+    #                                 contato='Benzoato de Sódio')
+    # except Exception as e:
+    #     print(f'Erro ao inserir Revendedor: {e}')
+    #
+    # print('fim')
+
 
     try:
-        Revendedor.insertRevendedor(nome='Benzoato de Sódio', cnpj='12345678901234',
-                                    razao_social='Benzoato de Sódio LTDA',
-                                    contato='Benzoato de Sódio')
+        revendedor = Revendedor.deleteRevendedorById(id_revendedor=55)
+        print(revendedor)
     except Exception as e:
-        print(f'Erro ao inserir Revendedor: {e}')
-
-    print('fim')
+        print(f'Erro ao deletar Revendedor: {e}')

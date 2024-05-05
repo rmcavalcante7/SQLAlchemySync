@@ -3,6 +3,7 @@ from datetime import datetime
 from models.model_base import ModelBase
 from sqlalchemy.exc import IntegrityError
 from conf.db_session import createSession
+from ScriptsAuxiliares.DataBaseFeatures import DataBaseFeatures
 
 
 class Ingrediente(ModelBase):
@@ -211,19 +212,70 @@ class Ingrediente(ModelBase):
         except Exception as exp:
             raise Exception(f'Erro inesperado ao atualizar Ingrediente: {exp}')
 
+    @staticmethod
+    def deleteIngredienteById(id_ingrediente: int) -> 'Ingrediente':
+        """Deleta um Ingrediente cadastrado no banco de dados a partir do id.
+        :param id_ingrediente: int: identificador do Ingrediente
+        :return: Ingrediente: Retorna o objeto Ingrediente deletado
+        :raises TypeError: Se o id não for um inteiro
+        :raises RuntimeError: Se ocorrer um erro de integridade ao deletar o Ingrediente, especificado para o
+        id, caso o Ingrediente esteja associado a um ou mais alimentos em outras tabelas. Caso seja por outro
+        motivo, será lançado um erro genérico.
+        :raises ValueError: Se o Ingrediente não for encontrado na base
+        """
+        try:
+            if not isinstance(id_ingrediente, int):
+                raise TypeError('id do Ingrediente deve ser um inteiro!')
+
+            with createSession() as session:
+                ingrediente: Ingrediente = session.query(Ingrediente). \
+                    filter_by(id=id_ingrediente).first()
+
+                if not ingrediente:
+                    raise ValueError(f'Ingrediente com id={id_ingrediente} não cadastrado na base!')
+
+                session.delete(ingrediente)
+                session.commit()
+                return ingrediente
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except IntegrityError as intg_error:
+            if 'FOREIGN KEY constraint failed' in str(intg_error):
+                tabelas = DataBaseFeatures.findTabelsWithFkTo(table_name=Ingrediente.__tablename__)
+                raise RuntimeError(f'Ingrediente com id={id_ingrediente} não pode ser deletado, '
+                                   f'pois pode está associado a um ou mais elementos na(s) tabela(s): {tabelas}')
+
+            else:
+                # Tratar outros erros de integridade do SQLAlchemy
+                raise RuntimeError(f'Erro de integridade ao deletar Ingrediente: {intg_error}')
+
+        except Exception as exc:
+            raise Exception(f'Erro inesperado ao deletar Ingrediente: {exc}')
+
 
 if __name__ == '__main__':
-    # try:
-    #     Ingrediente.insertIngrediente(nome='sal')
-    # except Exception as e:
-    #     print(f'Erro ao inserir Ingrediente: {e}')
-    #
+    try:
+        Ingrediente.insertIngrediente(nome='sal2')
+    except Exception as e:
+        print(f'Erro ao inserir Ingrediente: {e}')
+
     # try:
     #     Ingrediente.insertIngrediente(nome='açúcar')
     # except Exception as e:
     #     print(f'Erro ao inserir Ingrediente: {e}')
     #
 
-    ingrediente = Ingrediente.updateIngrediente(id_ingrediente=3,
-                                                nome='açucar')
-    print('ingrediente')
+    # ingrediente = Ingrediente.updateIngrediente(id_ingrediente=3,
+    #                                             nome='açucar')
+    # print('ingrediente')
+
+    try:
+        ingrediente = Ingrediente.deleteIngredienteById(id_ingrediente=98)
+        print(ingrediente)
+    except Exception as e:
+        print(f'Erro ao deletar Ingrediente: {e}')

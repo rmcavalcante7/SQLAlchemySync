@@ -239,8 +239,7 @@ class LoteNotaFiscal(ModelBase):
                 else:
                     nota_fiscal_fk = lote_nota_fiscal.nota_fiscal_fk
 
-                lote_nota_fiscal.picole_aditivo_nutritivo = (f'{lote_nota_fiscal.lote_fk}-'
-                                                             f'{lote_nota_fiscal.nota_fiscal_fk}')
+                lote_nota_fiscal.lote_nota_fiscal = f'{lote_fk}-{nota_fiscal_fk}'
                 lote_nota_fiscal.data_atualizacao = datetime.now()
                 session.commit()
                 return lote_nota_fiscal
@@ -267,19 +266,58 @@ class LoteNotaFiscal(ModelBase):
         except Exception as exc:
             raise RuntimeError(f'Erro inesperado ao atualizar LoteNotaFiscal: {exc}')
 
+    @staticmethod
+    def deleteLoteNotaFiscalById(id_lote_nf: int) -> 'LoteNotaFiscal':
+        """Deleta um LoteNotaFiscal na tabela lote_nota_fiscal
+        :param id_lote_nf: int: id do LoteNotaFiscal
+        :raises TypeError: Se o id_lote_nf não for um inteiro
+        :raises ValueError: Se o LoteNotaFiscal não for encontrado
+        :raises RuntimeError: Se ocorrer um erro ao deletar o LoteNotaFiscal
+        """
+
+        try:
+            if not isinstance(id_lote_nf, int):
+                raise TypeError('id_lote_nf do LoteNotaFiscal deve ser um inteiro!')
+
+            with createSession() as session:
+                lote_nota_fiscal = session.query(LoteNotaFiscal).filter_by(
+                    id=id_lote_nf).first()
+                if not lote_nota_fiscal:
+                    raise ValueError(f'LoteNotaFiscal com id={id_lote_nf} não encontrado!')
+
+                session.delete(lote_nota_fiscal)
+                session.commit()
+                return lote_nota_fiscal
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except Exception as exc:
+            raise RuntimeError(f'Erro inesperado ao deletar LoteNotaFiscal: {exc}')
+
+
 
 if __name__ == '__main__':
-    try:
-        LoteNotaFiscal.insertLoteNotaFiscal(nota_fiscal_fk=1, lote_fk=1)
-    except Exception as e:
-        print(f'Erro ao inserir LoteNotaFiscal: {e}')
+    # try:
+    #     LoteNotaFiscal.insertLoteNotaFiscal(nota_fiscal_fk=1, lote_fk=1)
+    # except Exception as e:
+    #     print(f'Erro ao inserir LoteNotaFiscal: {e}')
+    #
+    # try:
+    #     LoteNotaFiscal.insertLoteNotaFiscal(nota_fiscal_fk=1, lote_fk=1)
+    # except Exception as e:
+    #     print(f'Erro ao inserir LoteNotaFiscal: {e}')
+    #
+    # try:
+    #     LoteNotaFiscal.insertLoteNotaFiscal(nota_fiscal_fk=1, lote_fk=2)
+    # except Exception as e:
+    #     print(f'Erro ao inserir LoteNotaFiscal: {e}')
 
     try:
-        LoteNotaFiscal.insertLoteNotaFiscal(nota_fiscal_fk=1, lote_fk=1)
+        lote_nf = LoteNotaFiscal.deleteLoteNotaFiscalById(id_lote_nf=2)
+        print(f'deletado:\n{lote_nf}')
     except Exception as e:
-        print(f'Erro ao inserir LoteNotaFiscal: {e}')
-
-    try:
-        LoteNotaFiscal.insertLoteNotaFiscal(nota_fiscal_fk=1, lote_fk=2)
-    except Exception as e:
-        print(f'Erro ao inserir LoteNotaFiscal: {e}')
+        print(f'Erro ao deletar LoteNotaFiscal: {e}')

@@ -3,6 +3,7 @@ from datetime import datetime
 from models.model_base import ModelBase
 from conf.db_session import createSession
 from sqlalchemy.exc import IntegrityError
+from ScriptsAuxiliares.DataBaseFeatures import DataBaseFeatures
 
 
 class TipoEmbalagem(ModelBase):
@@ -23,7 +24,7 @@ class TipoEmbalagem(ModelBase):
     @staticmethod
     def insertTipoEmbalagem(nome: str) -> 'TipoEmbalagem' or None:
         """Insere um TipoEmbalagem na tabela tipo_embalagem
-        :param nome: str: nome do aditivo
+        :param nome: str: nome do TipoEmbalagem
         :return: TipoEmbalagem or None: Retorna o objeto TipoEmbalagem se inserido com sucesso, None caso contrário
         :raises TypeError: Se o nome não for string
         :raises ValueError: Se o nome não for informado
@@ -204,8 +205,53 @@ class TipoEmbalagem(ModelBase):
 
         except Exception as exp:
             raise Exception(f'Erro inesperado ao atualizar TipoEmbalagem: {exp}')
-        
-        
+
+    @staticmethod
+    def deleteTipoEmbalagemById(id_tipo_embalagem: int) -> 'TipoEmbalagem':
+        """Deleta um TipoEmbalagem cadastrado no banco de dados a partir do id.
+        :param id_tipo_embalagem: int: identificador do TipoEmbalagem
+        :return: TipoEmbalagem: Retorna o objeto TipoEmbalagem deletado
+        :raises TypeError: Se o id_tipo_embalagem não for um inteiro
+        :raises RuntimeError: Se ocorrer um erro de integridade ao deletar o TipoEmbalagem, especificado para o
+        id_tipo_embalagem, caso o TipoEmbalagem esteja associado a um ou mais alimentos em outras tabelas. Caso seja por outro
+        motivo, será lançado um erro genérico.
+        :raises ValueError: Se o TipoEmbalagem não for encontrado na base
+        """
+        try:
+            if not isinstance(id_tipo_embalagem, int):
+                raise TypeError('id do TipoEmbalagem deve ser um inteiro!')
+
+            with createSession() as session:
+                tipo_embalagem: TipoEmbalagem = session.query(TipoEmbalagem). \
+                    filter_by(id=id_tipo_embalagem).first()
+
+                if not tipo_embalagem:
+                    raise ValueError(f'TipoEmbalagem com id={id_tipo_embalagem} não cadastrado na base!')
+
+                session.delete(tipo_embalagem)
+                session.commit()
+                return tipo_embalagem
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except IntegrityError as intg_error:
+            if 'FOREIGN KEY constraint failed' in str(intg_error):
+                tabelas = DataBaseFeatures.findTabelsWithFkTo(table_name=TipoEmbalagem.__tablename__)
+                raise RuntimeError(f'TipoEmbalagem com id={id_tipo_embalagem} não pode ser deletado, '
+                                   f'pois pode está associado a um ou mais elementos na(s) tabela(s): {tabelas}')
+            else:
+                # Tratar outros erros de integridade do SQLAlchemy
+                raise RuntimeError(f'Erro de integridade ao deletar TipoEmbalagem: {intg_error}')
+
+        except Exception as exc:
+            raise Exception(f'Erro inesperado ao deletar TipoEmbalagem: {exc}')
+
+
+
 if __name__ == '__main__':
     # try:
     #     TipoEmbalagem.insertTipoEmbalagem(nome='Pote')
@@ -222,7 +268,14 @@ if __name__ == '__main__':
     # except Exception as e:
     #     print(f'Erro ao inserir TipoEmbalagem: {e}')
 
-    tipo_embalagen = TipoEmbalagem.updateTipoEmbalagem(id_tipo_embalagem=4532,
-                                                       nome='Pote')
+    # tipo_embalagen = TipoEmbalagem.updateTipoEmbalagem(id_tipo_embalagem=4532,
+    #                                                    nome='Pote')
+    #
+    # print(tipo_embalagen)
 
-    print(tipo_embalagen)
+
+    try:
+        tipo_embalagen = TipoEmbalagem.deleteTipoEmbalagemById(id_tipo_embalagem=71)
+        print(tipo_embalagen)
+    except Exception as e:
+        print(f'Erro ao deletar TipoEmbalagem: {e}')

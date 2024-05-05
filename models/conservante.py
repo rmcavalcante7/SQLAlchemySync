@@ -3,7 +3,7 @@ from datetime import datetime
 from models.model_base import ModelBase
 from conf.db_session import createSession
 from sqlalchemy.exc import IntegrityError
-
+from ScriptsAuxiliares.DataBaseFeatures import DataBaseFeatures
 
 class Conservante(ModelBase):
     __tablename__ = 'conservante'
@@ -234,6 +234,50 @@ class Conservante(ModelBase):
         except Exception as exc:
             raise Exception(f'Erro inesperado ao atualizar Conservante: {exc}')
 
+    @staticmethod
+    def deleteConservanteById(id_conservante: int) -> 'Conservante':
+        """Deleta um Conservante cadastrado no banco de dados a partir do id.
+        :param id_conservante: int: identificador do Conservante
+        :return: Conservante: Retorna o objeto Conservante deletado
+        :raises TypeError: Se o id não for um inteiro
+        :raises RuntimeError: Se ocorrer um erro de integridade ao deletar o Conservante, especificado para o
+        id, caso o Conservante esteja associado a um ou mais alimentos em outras tabelas. Caso seja por outro
+        motivo, será lançado um erro genérico.
+        :raises ValueError: Se o Conservante não for encontrado na base
+        """
+        try:
+            if not isinstance(id_conservante, int):
+                raise TypeError('id do Conservante deve ser um inteiro!')
+
+            with createSession() as session:
+                conservante: Conservante = session.query(Conservante). \
+                    filter_by(id=id_conservante).first()
+
+                if not conservante:
+                    raise ValueError(f'Conservante com id={id_conservante} não cadastrado na base!')
+
+                session.delete(conservante)
+                session.commit()
+                return conservante
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except IntegrityError as intg_error:
+            if 'FOREIGN KEY constraint failed' in str(intg_error):
+                tabelas = DataBaseFeatures.findTabelsWithFkTo(table_name=Conservante.__tablename__)
+                raise RuntimeError(f'Conservante com id={id_conservante} não pode ser deletado, '
+                                   f'pois pode está associado a um ou mais elementos na(s) tabela(s): {tabelas}')
+            else:
+                # Tratar outros erros de integridade do SQLAlchemy
+                raise RuntimeError(f'Erro de integridade ao deletar Conservante: {intg_error}')
+
+        except Exception as exc:
+            raise Exception(f'Erro inesperado ao deletar Conservante: {exc}')
+
 
 if __name__ == '__main__':
     # try:
@@ -251,10 +295,16 @@ if __name__ == '__main__':
     # except Exception as e:
     #     print(f'Erro ao inserir Conservante: {e}')
 
-    conservante = Conservante.updateConservante(id_conservante=1999,
-                                                nome='',
-                                                descricao='Utilizado para conservar alimentos. '
-                                                          'Evita a proliferação de fungos e leveduras.'
-                                                          ' Conservante muito utilizado na indústria alimentícia.'
-                                                )
-    print(conservante)
+    # conservante = Conservante.updateConservante(id_conservante=1999,
+    #                                             nome='',
+    #                                             descricao='Utilizado para conservar alimentos. '
+    #                                                       'Evita a proliferação de fungos e leveduras.'
+    #                                                       ' Conservante muito utilizado na indústria alimentícia.'
+    #                                             )
+    # print(conservante)
+
+    try:
+        conservante = Conservante.deleteConservanteById(id_conservante=43)
+        print(conservante)
+    except Exception as e:
+        print(f'Erro ao deletar Conservante: {e}')

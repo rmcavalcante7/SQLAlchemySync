@@ -3,6 +3,7 @@ from datetime import datetime
 from models.model_base import ModelBase
 from conf.db_session import createSession
 from sqlalchemy.exc import IntegrityError
+from ScriptsAuxiliares.DataBaseFeatures import DataBaseFeatures
 
 
 class AditivoNutritivo(ModelBase):
@@ -323,6 +324,51 @@ class AditivoNutritivo(ModelBase):
             raise Exception(f'Erro inesperado ao atualizar AditivoNutritivo: {exp}')
 
 
+    @staticmethod
+    def deleteAditivoNutritivoById(id_aditivo_nutritivo: int) -> 'AditivoNutritivo':
+        """Deleta um aditivo nutritivo cadastrado no banco de dados a partir do id.
+        :param id_aditivo_nutritivo: int: identificador do aditivo nutritivo
+        :return: AditivoNutritivo: Retorna o objeto AditivoNutritivo deletado
+        :raises TypeError: Se o id não for um inteiro
+        :raises RuntimeError: Se ocorrer um erro de integridade ao deletar o aditivo nutritivo, especificado para o
+        id, caso o aditivo nutritivo esteja associado a um ou mais alimentos em outras tabelas. Caso seja por outro
+        motivo, será lançado um erro genérico.
+        :raises ValueError: Se o aditivo nutritivo não for encontrado na base
+        """
+        try:
+            if not isinstance(id_aditivo_nutritivo, int):
+                raise TypeError('id do AditivoNutritivo deve ser um inteiro!')
+
+            with createSession() as session:
+                aditivo_nutritivo: AditivoNutritivo = session.query(AditivoNutritivo). \
+                    filter_by(id=id_aditivo_nutritivo).first()
+
+                if not aditivo_nutritivo:
+                    raise ValueError(f'AditivoNutritivo com id={id_aditivo_nutritivo} não cadastrado na base!')
+
+                session.delete(aditivo_nutritivo)
+                session.commit()
+                return aditivo_nutritivo
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except IntegrityError as intg_error:
+            if 'FOREIGN KEY constraint failed' in str(intg_error):
+                tabelas = DataBaseFeatures.findTabelsWithFkTo(table_name=AditivoNutritivo.__tablename__)
+                raise RuntimeError(f'AditivoNutritivo com id={id_aditivo_nutritivo} não pode ser deletado, '
+                                   f'pois pode está associado a um ou mais elementos na(s) tabela(s): {tabelas}')
+            else:
+                # Tratar outros erros de integridade do SQLAlchemy
+                raise RuntimeError(f'Erro de integridade ao deletar AditivoNutritivo: {intg_error}')
+
+        except Exception as exc:
+            raise Exception(f'Erro inesperado ao deletar AditivoNutritivo: {exc}')
+
+
 if __name__ == '__main__':
     # try:
     #     insertAditivoNutritivo(nome='VITAMIna D', formula_quimica='C27H44O')
@@ -355,7 +401,15 @@ if __name__ == '__main__':
     #           f'data_atualizacao={aditivo.data_atualizacao}'
     #           )
 
-    aditivo_atualizado = AditivoNutritivo.updateAditivoNutritivo(id_aditivo_nutritivo=0,
-                                                                 nome='VITAMINA C',
-                                                                 formula_quimica='')
-    print(aditivo_atualizado)
+    # aditivo_atualizado = AditivoNutritivo.updateAditivoNutritivo(id_aditivo_nutritivo=0,
+    #                                                              nome='VITAMINA C',
+    #                                                              formula_quimica='')
+    # print(aditivo_atualizado)
+
+
+    try:
+        aditivo_deletado = AditivoNutritivo.deleteAditivoNutritivoById(id_aditivo_nutritivo=64)
+        print(aditivo_deletado)
+    except Exception as e:
+        print(f'Erro ao deletar AditivoNutritivo: {e}')
+

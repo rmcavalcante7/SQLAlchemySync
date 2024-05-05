@@ -269,6 +269,38 @@ class AditivoNutritivoPicole(ModelBase):
             raise RuntimeError(f'Erro inesperado ao atualizar AditivoNutritivoPicole: {exc}')
 
 
+    @staticmethod
+    def deleteAditivoNutritivoPicoleById(id_adit_nut_picole: int) -> 'AditivoNutritivoPicole':
+        """Deleta um AditivoNutritivoPicole na tabela aditivo_nutritivo_picole
+        :param id_adit_nut_picole: int: id do AditivoNutritivoPicole
+        :raises TypeError: Se o id_adit_nut_picole não for um inteiro
+        :raises ValueError: Se o AditivoNutritivoPicole não for encontrado
+        :raises RuntimeError: Se ocorrer um erro ao deletar o AditivoNutritivoPicole
+        """
+
+        try:
+            if not isinstance(id_adit_nut_picole, int):
+                raise TypeError('id_adit_nut_picole do AditivoNutritivoPicole deve ser um inteiro!')
+
+            with createSession() as session:
+                aditivo_nutritivo_picole = session.query(AditivoNutritivoPicole).filter_by(id=id_adit_nut_picole).first()
+                if not aditivo_nutritivo_picole:
+                    raise ValueError(f'AditivoNutritivoPicole com id={id_adit_nut_picole} não encontrado!')
+
+                session.delete(aditivo_nutritivo_picole)
+                session.commit()
+                return aditivo_nutritivo_picole
+
+        except TypeError as te:
+            raise TypeError(te)
+
+        except ValueError as ve:
+            raise ValueError(ve)
+
+        except Exception as exc:
+            raise RuntimeError(f'Erro inesperado ao deletar AditivoNutritivoPicole: {exc}')
+
+
 if __name__ == '__main__':
     # try:
     #     AditivoNutritivoPicole.insertAditivoNutritivoPicole(picole_fk=1, aditivo_nutritivo_fk=1)

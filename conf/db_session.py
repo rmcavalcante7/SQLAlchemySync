@@ -5,7 +5,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy.future.engine import Engine
 from models.model_base import ModelBase
-from Auxiliar import Auxiliar
+from ScriptsAuxiliares.Auxiliar import Auxiliar
 
 
 # Descrive all this module does
@@ -100,7 +100,6 @@ def createTables(sqlite: bool = True) -> None:
     if __engine is None:
         __engine = createEngine(sqlite=sqlite)
 
-    import models.__all_models  # utilizado para importar todos os modelos
     ModelBase.metadata.drop_all(__engine)
     ModelBase.metadata.create_all(__engine)
 

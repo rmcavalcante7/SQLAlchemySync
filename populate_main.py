@@ -258,10 +258,14 @@ def populate_ingrediente_picole():
     # Estamos criando a sessão antes pois vamos inserir vários objetos
     session: Session = createSession()
     cor = gerar_cor()
+    chave = []
     for n in tqdm(range(1, 101), desc='Cadastrando...', colour=cor):
         picole_fk: int = gerar_int()
         ingrediente_fk: int = gerar_int()
         ingrediente_picole2 = f'{ingrediente_fk}-{picole_fk}'
+        if ingrediente_picole2 in chave:
+            continue
+        chave.append(ingrediente_picole2)
         ingrediente_picole: IngredientePicole = IngredientePicole(picole_fk=picole_fk,
                                                                   ingrediente_fk=ingrediente_fk,
                                                                   ingrediente_picole=ingrediente_picole2)
