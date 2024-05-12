@@ -1,5 +1,8 @@
 import sqlalchemy as sa
 from datetime import datetime
+
+from sqlalchemy.orm import Mapped
+
 from models.model_base import ModelBase
 from conf.db_session import createSession
 from sqlalchemy.exc import IntegrityError
@@ -9,15 +12,16 @@ from ScriptsAuxiliares.DataBaseFeatures import DataBaseFeatures
 class Revendedor(ModelBase):
     __tablename__ = 'revendedor'
 
-    id: int = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),  # para funcionar o autoincrement no sqlite
-                        primary_key=True, autoincrement=True)
-    nome: str = sa.Column(sa.String(100), nullable=False)
-    cnpj: str = sa.Column(sa.String(14), unique=True, nullable=False)
-    razao_social: str = sa.Column(sa.String(100), nullable=False)
-    contato: str = sa.Column(sa.String(100), nullable=False)
-    data_criacao: datetime = sa.Column(sa.DateTime, nullable=False, default=datetime.now)
-    data_atualizacao: datetime = sa.Column(sa.DateTime, default=datetime.now,
-                                           nullable=False, onupdate=datetime.now)
+    id: Mapped[int] = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
+                                # para funcionar o autoincrement no sqlite
+                                primary_key=True, autoincrement=True)
+    nome: Mapped[str] = sa.Column(sa.String(100), nullable=False)
+    cnpj: Mapped[str] = sa.Column(sa.String(14), unique=True, nullable=False)
+    razao_social: Mapped[str] = sa.Column(sa.String(100), nullable=False)
+    contato: Mapped[str] = sa.Column(sa.String(100), nullable=False)
+    data_criacao: Mapped[datetime] = sa.Column(sa.DateTime, nullable=False, default=datetime.now)
+    data_atualizacao: Mapped[datetime] = sa.Column(sa.DateTime, default=datetime.now,
+                                                   nullable=False, onupdate=datetime.now)
 
     def __repr__(self):
         """Retorna uma representação do objeto em forma de 'string'."""
@@ -227,7 +231,6 @@ class Revendedor(ModelBase):
         except Exception as exc:
             print(f'Erro inesperado: {exc}')
 
-    
     @staticmethod
     def updateRevendedor(id_revendedor: int, nome: str, cnpj: str, razao_social: str, contato: str) -> 'Revendedor':
         """Atualiza um Revendedor na tabela revendedor
@@ -255,8 +258,7 @@ class Revendedor(ModelBase):
                 raise TypeError('razao_social do Revendedor deve ser uma string!')
             if not isinstance(contato, str):
                 raise TypeError('contato do Revendedor deve ser uma string!')
-            
-            
+
             if len(nome) > 0 and all(caractere.isspace() for caractere in nome):
                 raise ValueError('nome do Revendedor não pode ser composto só por espaços!')
             if len(cnpj) > 0 and all(caractere.isspace() for caractere in cnpj):
@@ -265,7 +267,7 @@ class Revendedor(ModelBase):
                 raise ValueError('razao_social do Revendedor não pode ser composto só por espaços!')
             if len(contato) > 0 and all(caractere.isspace() for caractere in contato):
                 raise ValueError('contato do Revendedor não pode ser composto só por espaços!')
-            
+
             nome = nome.strip().upper()
             cnpj = cnpj.strip().upper()
             razao_social = razao_social.strip().upper()
@@ -356,8 +358,8 @@ class Revendedor(ModelBase):
 
         except Exception as exc:
             raise Exception(f'Erro inesperado ao deletar Revendedor: {exc}')
-        
-        
+
+
 if __name__ == '__main__':
     # try:
     #     Revendedor.insertRevendedor(nome='Sorbato de Potássio', cnpj='12345678901234',
@@ -374,7 +376,6 @@ if __name__ == '__main__':
     #     print(f'Erro ao inserir Revendedor: {e}')
     #
     # print('fim')
-
 
     try:
         revendedor = Revendedor.deleteRevendedorById(id_revendedor=55)

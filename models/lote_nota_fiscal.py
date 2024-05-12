@@ -3,6 +3,9 @@ from typing import Union
 import sqlalchemy as sa
 import sqlalchemy.orm as orm
 from datetime import datetime
+
+from sqlalchemy.orm import Mapped
+
 from models.model_base import ModelBase
 from models.lote import Lote
 from models.nota_fiscal import NotaFiscal
@@ -13,30 +16,31 @@ from sqlalchemy.exc import IntegrityError
 class LoteNotaFiscal(ModelBase):
     __tablename__ = 'lote_nota_fiscal'
 
-    id: int = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),  # para funcionar o autoincrement no sqlite
-                        primary_key=True,
-                        autoincrement=True)
+    id: Mapped[int] = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
+                                # para funcionar o autoincrement no sqlite
+                                primary_key=True,
+                                autoincrement=True)
 
-    nota_fiscal_fk: int = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
-                                    sa.ForeignKey('nota_fiscal.id'),
-                                    nullable=False
-                                    )
-    nota_fiscal: NotaFiscal = orm.relationship('NotaFiscal', lazy='joined')
+    nota_fiscal_fk: Mapped[int] = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
+                                            sa.ForeignKey('nota_fiscal.id'),
+                                            nullable=False
+                                            )
+    nota_fiscal: Mapped[NotaFiscal] = orm.relationship('NotaFiscal', lazy='joined')
 
-    lote_fk: int = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
-                             sa.ForeignKey('lote.id'),
-                             unique=True,  # um lote só pode estar vinculado a uma nota fiscal
-                             nullable=False)
-    lote: Lote = orm.relationship('Lote', lazy='joined')
+    lote_fk: Mapped[int] = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
+                                     sa.ForeignKey('lote.id'),
+                                     unique=True,  # um lote só pode estar vinculado a uma nota fiscal
+                                     nullable=False)
+    lote: Mapped[Lote] = orm.relationship('Lote', lazy='joined')
 
     # chave forte para imedir se ser inserido o mesmo par de lote e nota fiscal
-    lote_nota_fiscal: str = sa.Column(sa.String(200),
-                                      unique=True,
-                                      nullable=False)
+    lote_nota_fiscal: Mapped[str] = sa.Column(sa.String(200),
+                                              unique=True,
+                                              nullable=False)
 
-    data_criacao: datetime = sa.Column(sa.DateTime, nullable=False, default=datetime.now)
-    data_atualizacao: datetime = sa.Column(sa.DateTime, default=datetime.now,
-                                           nullable=False, onupdate=datetime.now)
+    data_criacao: Mapped[datetime] = sa.Column(sa.DateTime, nullable=False, default=datetime.now)
+    data_atualizacao: Mapped[datetime] = sa.Column(sa.DateTime, default=datetime.now,
+                                                   nullable=False, onupdate=datetime.now)
 
     def __repr__(self):
         return f'LoteNotaFiscal(id={self.id}, lote_fk={self.lote_fk}, nota_fiscal_fk={self.nota_fiscal_fk})'
@@ -297,7 +301,6 @@ class LoteNotaFiscal(ModelBase):
 
         except Exception as exc:
             raise RuntimeError(f'Erro inesperado ao deletar LoteNotaFiscal: {exc}')
-
 
 
 if __name__ == '__main__':

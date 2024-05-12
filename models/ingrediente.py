@@ -1,5 +1,8 @@
 import sqlalchemy as sa
 from datetime import datetime
+
+from sqlalchemy.orm import Mapped
+
 from models.model_base import ModelBase
 from sqlalchemy.exc import IntegrityError
 from conf.db_session import createSession
@@ -9,18 +12,18 @@ from ScriptsAuxiliares.DataBaseFeatures import DataBaseFeatures
 class Ingrediente(ModelBase):
     __tablename__ = 'ingrediente'
 
-    id: int = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),  # para funcionar o autoincrement no sqlite
-                        primary_key=True, autoincrement=True)
-    nome: str = sa.Column(sa.String(45), unique=True, nullable=False)
-    data_criacao: datetime = sa.Column(sa.DateTime, nullable=False, default=datetime.now)
-    data_atualizacao: datetime = sa.Column(sa.DateTime, default=datetime.now,
-                                           nullable=False, onupdate=datetime.now)
+    id: Mapped[int] = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
+                                # para funcionar o autoincrement no sqlite
+                                primary_key=True, autoincrement=True)
+    nome: Mapped[str] = sa.Column(sa.String(45), unique=True, nullable=False)
+    data_criacao: Mapped[datetime] = sa.Column(sa.DateTime, nullable=False, default=datetime.now)
+    data_atualizacao: Mapped[datetime] = sa.Column(sa.DateTime, default=datetime.now,
+                                                   nullable=False, onupdate=datetime.now)
 
     def __repr__(self):
         """Retorna uma representação do objeto em forma de 'string'."""
         return f'<Ingrediente (nome={self.nome})>'
 
-    
     @staticmethod
     def insertIngrediente(nome: str) -> 'Ingrediente' or None:
         """Insere um Ingrediente na tabela ingrediente
@@ -30,31 +33,31 @@ class Ingrediente(ModelBase):
         :raises RuntimeError: Se ocorrer um erro de integridade ao inserir o ingrediente, especificado para o nome. Caso
         seja por outro motivo, será lançado um erro genérico.
         """
-    
+
         try:
             # check if is string
             if not isinstance(nome, str):
                 raise TypeError('nome do Ingrediente deve ser uma string!')
-    
+
             nome = nome.strip().upper()
-    
+
             # validar se os parâmetros informados são válidos
             if not nome:
                 raise ValueError('nome do Ingrediente não informado!')
-    
+
             ingrediente = Ingrediente(nome=nome)
-    
+
             with createSession() as session:
                 print(f'Inserindo Ingrediente: {ingrediente}')
                 session.add(ingrediente)
                 session.commit()
-    
+
                 print(f'Ingrediente inserido com sucesso!')
                 print(f'ID do Ingrediente inserido: {ingrediente.id}')
                 print(f'Nome do Ingrediente inserido: {ingrediente.nome}')
                 print(f'Data de criação do Ingrediente inserido: {ingrediente.data_criacao}')
             return ingrediente
-    
+
         except IntegrityError as intg_error:
             if 'UNIQUE constraint failed' in str(intg_error):
                 if 'ingrediente.nome' in str(intg_error):
@@ -63,13 +66,13 @@ class Ingrediente(ModelBase):
             else:
                 # Tratar outros erros de integridade do SQLAlchemy
                 raise RuntimeError(f'Erro de Ingrediente ao inserir ingrediente: {intg_error}')
-    
+
         except TypeError as te:
             raise TypeError(te)
-    
+
         except ValueError as ve:
             raise ValueError(ve)
-    
+
         except Exception as exc:
             print(f'Erro inesperado: {exc}')
 
@@ -83,7 +86,7 @@ class Ingrediente(ModelBase):
             with createSession() as session:
                 ingredientes = session.query(Ingrediente).all()
                 return ingredientes
-    
+
         except Exception as exc:
             raise Exception(f'Erro inesperado ao selecionar Ingredientes: {exc}')
 
@@ -100,21 +103,21 @@ class Ingrediente(ModelBase):
             # check if is integer
             if not isinstance(id, int):
                 raise TypeError('id do Ingrediente deve ser um inteiro!')
-    
+
             # validar se os parâmetros informados são válidos
             if not id:
                 raise ValueError('id do Ingrediente não informado!')
-    
+
             with createSession() as session:
                 ingrediente = session.query(Ingrediente).filter(Ingrediente.id == id).first()
                 return ingrediente
-    
+
         except TypeError as te:
             raise TypeError(te)
-    
+
         except ValueError as ve:
             raise ValueError(ve)
-    
+
         except Exception as exc:
             print(f'Erro inesperado: {exc}')
 
@@ -131,26 +134,25 @@ class Ingrediente(ModelBase):
             # check if is string
             if not isinstance(nome, str):
                 raise TypeError('nome do Ingrediente deve ser uma string!')
-    
+
             nome = nome.strip().upper()
-    
+
             # validar se os parâmetros informados são válidos
             if not nome:
                 raise ValueError('nome do Ingrediente não informado!')
-    
+
             with createSession() as session:
                 ingrediente = session.query(Ingrediente).filter(Ingrediente.nome == nome).first()
                 return ingrediente
-    
+
         except TypeError as te:
             raise TypeError(te)
-    
+
         except ValueError as ve:
             raise ValueError(ve)
-    
+
         except Exception as exc:
             print(f'Erro inesperado: {exc}')
-
 
     @staticmethod
     def updateIngrediente(id_ingrediente: int, nome: str = '') -> 'Ingrediente':

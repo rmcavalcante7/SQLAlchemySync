@@ -1,6 +1,9 @@
 import sqlalchemy as sa
 import sqlalchemy.orm as orm
 from datetime import datetime
+
+from sqlalchemy.orm import Mapped
+
 from models.model_base import ModelBase
 from models.revendedor import Revendedor
 from typing import List, Union
@@ -9,33 +12,30 @@ from sqlalchemy.exc import IntegrityError
 from ScriptsAuxiliares.DataBaseFeatures import DataBaseFeatures
 
 
-
 class NotaFiscal(ModelBase):
     __tablename__ = 'nota_fiscal'
 
-    id: int = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),  # para funcionar o autoincrement no sqlite
-                        primary_key=True, autoincrement=True)
-    valor: float = sa.Column(sa.DECIMAL(decimal_return_scale=2).with_variant(sa.Float(), "sqlite"),
-                             nullable=False)
+    id: Mapped[int] = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
+                                # para funcionar o autoincrement no sqlite
+                                primary_key=True, autoincrement=True)
+    valor: Mapped[float] = sa.Column(sa.DECIMAL(decimal_return_scale=2).with_variant(sa.Float(), "sqlite"),
+                                     nullable=False)
 
-    numero_serie: str = sa.Column(sa.String(45), unique=True, nullable=False)
-    descricao: str = sa.Column(sa.String(200), nullable=False)
+    numero_serie: Mapped[str] = sa.Column(sa.String(45), unique=True, nullable=False)
+    descricao: Mapped[str] = sa.Column(sa.String(200), nullable=False)
 
-    revendedor_fk: int = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
-                                   sa.ForeignKey('revendedor.id'), nullable=False)
-    revendedor: Revendedor = orm.relationship('Revendedor', lazy='joined')
+    revendedor_fk: Mapped[int] = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
+                                           sa.ForeignKey('revendedor.id'), nullable=False)
+    revendedor: Mapped[Revendedor] = orm.relationship('Revendedor', lazy='joined')
 
-    data_criacao: datetime = sa.Column(sa.DateTime, nullable=False, default=datetime.now)
-    data_atualizacao: datetime = sa.Column(sa.DateTime, default=datetime.now,
-                                           nullable=False, onupdate=datetime.now)
-
+    data_criacao: Mapped[datetime] = sa.Column(sa.DateTime, nullable=False, default=datetime.now)
+    data_atualizacao: Mapped[datetime] = sa.Column(sa.DateTime, default=datetime.now,
+                                                   nullable=False, onupdate=datetime.now)
 
     def __repr__(self):
         """Retorna uma representação do objeto em forma de 'string'."""
         return (f'<Nota Fiscal (numero_serie={self.numero_serie}, valor={self.valor},'
                 f'descricao={self.descricao})>')
-
-
 
     @staticmethod
     def insertNotaFiscal(valor: float, numero_serie: str, descricao: str, revendedor_fk: int) -> 'NotaFiscal' or None:
@@ -71,7 +71,6 @@ class NotaFiscal(ModelBase):
                 raise ValueError('numero_serie da NotaFiscal não informado!')
             if not descricao:
                 raise ValueError('descricao da NotaFiscal não informada!')
-
 
             nota_fiscal = NotaFiscal(valor=valor, numero_serie=numero_serie, descricao=descricao,
                                      revendedor_fk=revendedor_fk)
@@ -217,7 +216,6 @@ class NotaFiscal(ModelBase):
 
         except Exception as exc:
             print(f'Erro inesperado: {exc}')
-
 
     @staticmethod
     def updateNotaFiscal(id_nf: int, valor: Union[float, None], revendedor_fk: Union[int, None],

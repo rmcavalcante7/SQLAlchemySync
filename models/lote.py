@@ -2,6 +2,9 @@ from typing import Union
 import sqlalchemy as sa
 import sqlalchemy.orm as orm
 from datetime import datetime
+
+from sqlalchemy.orm import Mapped
+
 from models.model_base import ModelBase
 from models.picole import Picole
 from sqlalchemy.exc import NoForeignKeysError, IntegrityError
@@ -12,25 +15,25 @@ from ScriptsAuxiliares.DataBaseFeatures import DataBaseFeatures
 class Lote(ModelBase):
     __tablename__ = 'lote'
 
-    id: int = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),  # para funcionar o autoincrement no sqlite
-                        primary_key=True, autoincrement=True)
+    id: Mapped[int] = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
+                                # para funcionar o autoincrement no sqlite
+                                primary_key=True, autoincrement=True)
 
     # fk: nome_tabela.nome_campo
-    picole_fk: int = sa.Column(sa.BigInteger, sa.ForeignKey('picole.id'), nullable=False)
+    picole_fk: Mapped[int] = sa.Column(sa.BigInteger, sa.ForeignKey('picole.id'), nullable=False)
     # criando orm.relationship para acessar os dados da tabela relacionada,
     # é sempre necessário fazer essa configuração ao se ter uma chave estrangeira
     # permite acessar as informações da tabela relacionada, sem a necessidade de fazer uma nova consulta
-    picole: Picole = orm.relationship('Picole', lazy='joined')
+    picole: Mapped[Picole] = orm.relationship('Picole', lazy='joined')
 
-    quantidade: int = sa.Column(sa.BigInteger, nullable=False)
-    data_criacao: datetime = sa.Column(sa.DateTime, nullable=False, default=datetime.now)
-    data_atualizacao: datetime = sa.Column(sa.DateTime, default=datetime.now,
-                                           nullable=False, onupdate=datetime.now)
+    quantidade: Mapped[int] = sa.Column(sa.BigInteger, nullable=False)
+    data_criacao: Mapped[datetime] = sa.Column(sa.DateTime, nullable=False, default=datetime.now)
+    data_atualizacao: Mapped[datetime] = sa.Column(sa.DateTime, default=datetime.now,
+                                                   nullable=False, onupdate=datetime.now)
 
     def __repr__(self):
         """Retorna uma representação do objeto em forma de 'string'."""
         return (f'<Lote (picole_fk={self.picole_fk}, quantidade={self.quantidade})>')
-
 
     @staticmethod
     def insertLote(picole_fk: int, quantidade: int) -> 'Lote' or None:
@@ -98,7 +101,6 @@ class Lote(ModelBase):
         except Exception as exc:
             raise Exception(f'Erro inesperado ao selecionar todos Lote: {exc}')
 
-
     @staticmethod
     def selectLotePorId(id: int) -> 'Lote' or None:
         """Seleciona um Lote na tabela lote por id
@@ -129,7 +131,6 @@ class Lote(ModelBase):
         except Exception as e:
             print(f'Erro ao selecionar Lote: {e}')
 
-
     @staticmethod
     def selectLotesPorPicoleFk(picole_fk: int) -> list['Lote'] or []:
         """Seleciona um Lote na tabela lote por picole_fk
@@ -158,7 +159,6 @@ class Lote(ModelBase):
 
         except Exception as exc:
             print(f'Erro ao selecionar Lote: {exc}')
-
 
     @staticmethod
     def updateLote(id_lote: int, picole_fk: Union[int, None], quantidade: Union[int, None]) -> 'Lote':
@@ -261,7 +261,6 @@ class Lote(ModelBase):
 
         except Exception as exc:
             raise Exception(f'Erro inesperado ao deletar Lote: {exc}')
-
 
 
 if __name__ == '__main__':

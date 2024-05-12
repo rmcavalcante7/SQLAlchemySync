@@ -3,6 +3,9 @@ from typing import Union
 import sqlalchemy as sa
 import sqlalchemy.orm as orm
 from datetime import datetime
+
+from sqlalchemy.orm import Mapped
+
 from models.model_base import ModelBase
 from models.picole import Picole
 from models.aditivo_nutritivo import AditivoNutritivo
@@ -13,30 +16,31 @@ from sqlalchemy.exc import IntegrityError
 class AditivoNutritivoPicole(ModelBase):
     __tablename__ = 'aditivo_nutritivo_picole'
 
-    id: int = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),  # para funcionar o autoincrement no sqlite
-                        primary_key=True,
-                        autoincrement=True)
+    id: Mapped[int] = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
+                                # para funcionar o autoincrement no sqlite
+                                primary_key=True,
+                                autoincrement=True)
 
-    picole_fk: int = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
-                               sa.ForeignKey('picole.id'),
-                               nullable=False
-                               )
-    picole: Picole = orm.relationship('Picole', lazy='joined')
+    picole_fk: Mapped[int] = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
+                                       sa.ForeignKey('picole.id'),
+                                       nullable=False
+                                       )
+    picole: Mapped[Picole] = orm.relationship('Picole', lazy='joined')
 
-    aditivo_nutritivo_fk: int = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
-                                          sa.ForeignKey('aditivo_nutritivo.id'),
-                                          nullable=False
-                                          )
-    aditivo_nutritivo: AditivoNutritivo = orm.relationship('AditivoNutritivo', lazy='joined')
+    aditivo_nutritivo_fk: Mapped[int] = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
+                                                  sa.ForeignKey('aditivo_nutritivo.id'),
+                                                  nullable=False
+                                                  )
+    aditivo_nutritivo: Mapped[AditivoNutritivo] = orm.relationship('AditivoNutritivo', lazy='joined')
 
     # chave forte para impedir se ser inserido o mesmo par de lote e nota fiscal
-    picole_aditivo_nutritivo: str = sa.Column(sa.String(200),
-                                              unique=True,
-                                              nullable=False)
+    picole_aditivo_nutritivo: Mapped[str] = sa.Column(sa.String(200),
+                                                      unique=True,
+                                                      nullable=False)
 
-    data_criacao: datetime = sa.Column(sa.DateTime, nullable=False, default=datetime.now)
-    data_atualizacao: datetime = sa.Column(sa.DateTime, default=datetime.now,
-                                           nullable=False, onupdate=datetime.now)
+    data_criacao: Mapped[datetime] = sa.Column(sa.DateTime, nullable=False, default=datetime.now)
+    data_atualizacao: Mapped[datetime] = sa.Column(sa.DateTime, default=datetime.now,
+                                                   nullable=False, onupdate=datetime.now)
 
     def __repr__(self):
         # return (f'AditivoNutritivoPicolePicole(id={self.id}, '
@@ -221,7 +225,8 @@ class AditivoNutritivoPicole(ModelBase):
                 raise TypeError('picole_fk do AditivoNutritivoPicole deve ser um inteiro ou não deve ser informado!')
 
             if not isinstance(aditivo_nutritivo_fk, int) and aditivo_nutritivo_fk is not None:
-                raise TypeError('aditivo_nutritivo_fk do AditivoNutritivoPicole deve ser um inteiro ou não deve ser informado!')
+                raise TypeError(
+                    'aditivo_nutritivo_fk do AditivoNutritivoPicole deve ser um inteiro ou não deve ser informado!')
 
             with createSession() as session:
                 aditivo_nutritivo_picole = session.query(AditivoNutritivoPicole). \
@@ -268,7 +273,6 @@ class AditivoNutritivoPicole(ModelBase):
         except Exception as exc:
             raise RuntimeError(f'Erro inesperado ao atualizar AditivoNutritivoPicole: {exc}')
 
-
     @staticmethod
     def deleteAditivoNutritivoPicoleById(id_adit_nut_picole: int) -> 'AditivoNutritivoPicole':
         """Deleta um AditivoNutritivoPicole na tabela aditivo_nutritivo_picole
@@ -283,7 +287,8 @@ class AditivoNutritivoPicole(ModelBase):
                 raise TypeError('id_adit_nut_picole do AditivoNutritivoPicole deve ser um inteiro!')
 
             with createSession() as session:
-                aditivo_nutritivo_picole = session.query(AditivoNutritivoPicole).filter_by(id=id_adit_nut_picole).first()
+                aditivo_nutritivo_picole = session.query(AditivoNutritivoPicole).filter_by(
+                    id=id_adit_nut_picole).first()
                 if not aditivo_nutritivo_picole:
                     raise ValueError(f'AditivoNutritivoPicole com id={id_adit_nut_picole} não encontrado!')
 

@@ -1,5 +1,8 @@
 import sqlalchemy as sa
 from datetime import datetime
+
+from sqlalchemy.orm import Mapped
+
 from models.model_base import ModelBase
 from conf.db_session import createSession
 from sqlalchemy.exc import IntegrityError
@@ -9,18 +12,17 @@ from ScriptsAuxiliares.DataBaseFeatures import DataBaseFeatures
 class TipoPicole(ModelBase):
     __tablename__ = 'tipo_picole'
 
-    id: int = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),  # para funcionar o autoincrement no sqlite
-                        primary_key=True, autoincrement=True)
-    nome: str = sa.Column(sa.String(45), unique=True, nullable=False)
-    data_criacao: datetime = sa.Column(sa.DateTime, nullable=False, default=datetime.now)
-    data_atualizacao: datetime = sa.Column(sa.DateTime, default=datetime.now,
-                                           nullable=False, onupdate=datetime.now)
+    id: Mapped[int] = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
+                                # para funcionar o autoincrement no sqlite
+                                primary_key=True, autoincrement=True)
+    nome: Mapped[str] = sa.Column(sa.String(45), unique=True, nullable=False)
+    data_criacao: Mapped[datetime] = sa.Column(sa.DateTime, nullable=False, default=datetime.now)
+    data_atualizacao: Mapped[datetime] = sa.Column(sa.DateTime, default=datetime.now,
+                                                   nullable=False, onupdate=datetime.now)
 
     def __repr__(self):
         """Retorna uma representação do objeto em forma de 'string'."""
         return f'<Tipo Picole(nome={self.nome})>'
-
-
 
     @staticmethod
     def insertTipoPicole(nome: str) -> 'TipoPicole' or None:
@@ -287,4 +289,3 @@ if __name__ == '__main__':
         print(tipo_picole)
     except Exception as e:
         print(f'Erro ao deletar TipoPicole: {e}')
-

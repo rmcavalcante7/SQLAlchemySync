@@ -4,6 +4,7 @@ from models.model_base import ModelBase
 from conf.db_session import createSession
 from sqlalchemy.exc import IntegrityError
 from ScriptsAuxiliares.DataBaseFeatures import DataBaseFeatures
+from sqlalchemy.orm import Mapped
 
 
 class AditivoNutritivo(ModelBase):
@@ -18,32 +19,33 @@ class AditivoNutritivo(ModelBase):
 
     __tablename__ = 'aditivo_nutritivo'
 
-    id: int = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),  # para funcionar o autoincrement no sqlite
-                        primary_key=True,
-                        autoincrement=True,
-                        nullable=False
-                        )
+    id: Mapped[int] = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
+                                # para funcionar o autoincrement no sqlite
+                                primary_key=True,
+                                autoincrement=True,
+                                nullable=False
+                                )
 
-    nome: str = sa.Column(sa.String(45),
-                          unique=True,
-                          nullable=False
-                          )
+    nome: Mapped[str] = sa.Column(sa.String(45),
+                                  unique=True,
+                                  nullable=False
+                                  )
 
-    formula_quimica: str = sa.Column(sa.String(45),
-                                     unique=True,
-                                     nullable=False
-                                     )
+    formula_quimica: Mapped[str] = sa.Column(sa.String(45),
+                                             unique=True,
+                                             nullable=False
+                                             )
 
-    data_criacao: datetime = sa.Column(sa.DateTime,
-                                       default=datetime.now,
-                                       nullable=False
-                                       )
+    data_criacao: Mapped[datetime] = sa.Column(sa.DateTime,
+                                               default=datetime.now,
+                                               nullable=False
+                                               )
 
-    data_atualizacao: datetime = sa.Column(sa.DateTime,
-                                           default=datetime.now,
-                                           onupdate=datetime.now,
-                                           nullable=False
-                                           )
+    data_atualizacao: Mapped[datetime] = sa.Column(sa.DateTime,
+                                                   default=datetime.now,
+                                                   onupdate=datetime.now,
+                                                   nullable=False
+                                                   )
 
     def __repr__(self):
         """Retorna uma representação do objeto em forma de 'string'."""
@@ -291,7 +293,6 @@ class AditivoNutritivo(ModelBase):
                 if not adititvo_nutritivo:
                     raise ValueError(f'AditivoNutritivo com id={id_aditivo_nutritivo} não cadastrado na base!')
 
-
                 adititvo_nutritivo.nome = nome.strip().upper() if nome.strip() else adititvo_nutritivo.nome
 
                 adititvo_nutritivo.formula_quimica = formula_quimica.strip().upper() \
@@ -322,7 +323,6 @@ class AditivoNutritivo(ModelBase):
 
         except Exception as exp:
             raise Exception(f'Erro inesperado ao atualizar AditivoNutritivo: {exp}')
-
 
     @staticmethod
     def deleteAditivoNutritivoById(id_aditivo_nutritivo: int) -> 'AditivoNutritivo':
@@ -406,10 +406,8 @@ if __name__ == '__main__':
     #                                                              formula_quimica='')
     # print(aditivo_atualizado)
 
-
     try:
         aditivo_deletado = AditivoNutritivo.deleteAditivoNutritivoById(id_aditivo_nutritivo=64)
         print(aditivo_deletado)
     except Exception as e:
         print(f'Erro ao deletar AditivoNutritivo: {e}')
-

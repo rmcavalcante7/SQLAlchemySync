@@ -3,6 +3,9 @@ from typing import Union
 import sqlalchemy as sa
 import sqlalchemy.orm as orm
 from datetime import datetime
+
+from sqlalchemy.orm import Mapped
+
 from models.model_base import ModelBase
 from models.picole import Picole
 from models.ingrediente import Ingrediente
@@ -13,30 +16,31 @@ from sqlalchemy.exc import IntegrityError
 class IngredientePicole(ModelBase):
     __tablename__ = 'ingrediente_picole'
 
-    id: int = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),  # para funcionar o autoincrement no sqlite
-                        primary_key=True,
-                        autoincrement=True)
+    id: Mapped[int] = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
+                                # para funcionar o autoincrement no sqlite
+                                primary_key=True,
+                                autoincrement=True)
 
-    picole_fk: int = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
-                               sa.ForeignKey('picole.id'),
-                               nullable=False
-                               )
-    picole: Picole = orm.relationship('Picole', lazy='joined')
+    picole_fk: Mapped[int] = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
+                                       sa.ForeignKey('picole.id'),
+                                       nullable=False
+                                       )
+    picole: Mapped[Picole] = orm.relationship('Picole', lazy='joined')
 
-    ingrediente_fk: int = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
-                                    sa.ForeignKey('ingrediente.id'),
-                                    nullable=False
-                                    )
-    ingrediente: Ingrediente = orm.relationship('Ingrediente', lazy='joined')
+    ingrediente_fk: Mapped[int] = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
+                                            sa.ForeignKey('ingrediente.id'),
+                                            nullable=False
+                                            )
+    ingrediente: Mapped[Ingrediente] = orm.relationship('Ingrediente', lazy='joined')
 
     # chave forte para impedir duplicidade
-    ingrediente_picole: str = sa.Column(sa.String(200),
-                                        unique=True,
-                                        nullable=False)
+    ingrediente_picole: Mapped[str] = sa.Column(sa.String(200),
+                                                unique=True,
+                                                nullable=False)
 
-    data_criacao: datetime = sa.Column(sa.DateTime, nullable=False, default=datetime.now)
-    data_atualizacao: datetime = sa.Column(sa.DateTime, default=datetime.now,
-                                           nullable=False, onupdate=datetime.now)
+    data_criacao: Mapped[datetime] = sa.Column(sa.DateTime, nullable=False, default=datetime.now)
+    data_atualizacao: Mapped[datetime] = sa.Column(sa.DateTime, default=datetime.now,
+                                                   nullable=False, onupdate=datetime.now)
 
     def __repr__(self):
         return (f'IngredientePicole(id={self.id}, '

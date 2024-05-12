@@ -3,6 +3,9 @@ from typing import Union
 import sqlalchemy as sa
 import sqlalchemy.orm as orm
 from datetime import datetime
+
+from sqlalchemy.orm import Mapped
+
 from models.model_base import ModelBase
 from models.sabor import Sabor
 from models.tipo_picole import TipoPicole
@@ -15,36 +18,37 @@ from ScriptsAuxiliares.DataBaseFeatures import DataBaseFeatures
 class Picole(ModelBase):
     __tablename__ = 'picole'
 
-    id: int = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),  # para funcionar o autoincrement no sqlite
-                        primary_key=True, autoincrement=True)
+    id: Mapped[int] = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
+                                # para funcionar o autoincrement no sqlite
+                                primary_key=True, autoincrement=True)
 
-    preco: float = sa.Column(sa.DECIMAL(decimal_return_scale=2).with_variant(sa.Float(), "sqlite"),
-                             nullable=False)
+    preco: Mapped[float] = sa.Column(sa.DECIMAL(decimal_return_scale=2).with_variant(sa.Float(), "sqlite"),
+                                     nullable=False)
 
-    sabor_fk: int = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
-                              sa.ForeignKey('sabor.id'),
-                              nullable=False)
-    sabor: Sabor = orm.relationship('Sabor', lazy='joined')
+    sabor_fk: Mapped[int] = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
+                                      sa.ForeignKey('sabor.id'),
+                                      nullable=False)
+    sabor: Mapped[Sabor] = orm.relationship('Sabor', lazy='joined')
 
-    tipo_embalagem_fk: int = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
-                                       sa.ForeignKey('tipo_embalagem.id'),
-                                       nullable=False)
-    tipo_embalagem: TipoEmbalagem = orm.relationship('TipoEmbalagem', lazy='joined')
+    tipo_embalagem_fk: Mapped[int] = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
+                                               sa.ForeignKey('tipo_embalagem.id'),
+                                               nullable=False)
+    tipo_embalagem: Mapped[TipoEmbalagem] = orm.relationship('TipoEmbalagem', lazy='joined')
 
-    tipo_picole_fk: int = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
-                                    sa.ForeignKey('tipo_picole.id'),
-                                    nullable=False)
-    tipo_picole: TipoPicole = orm.relationship('TipoPicole', lazy='joined')
+    tipo_picole_fk: Mapped[int] = sa.Column(sa.BigInteger().with_variant(sa.Integer, "sqlite"),
+                                            sa.ForeignKey('tipo_picole.id'),
+                                            nullable=False)
+    tipo_picole: Mapped[TipoPicole] = orm.relationship('TipoPicole', lazy='joined')
 
     # chave forte para evitar duplicidades
     # chave forte para imedir se ser inserido o mesmo par de lote e nota fiscal
-    sabor_tipoPicole_tipoEmbalagem: str = sa.Column(sa.String(200),
-                                                    unique=True,
-                                                    nullable=False)
+    sabor_tipoPicole_tipoEmbalagem: Mapped[str] = sa.Column(sa.String(200),
+                                                            unique=True,
+                                                            nullable=False)
 
-    data_criacao: datetime = sa.Column(sa.DateTime, nullable=False, default=datetime.now)
-    data_atualizacao: datetime = sa.Column(sa.DateTime, default=datetime.now,
-                                           nullable=False, onupdate=datetime.now)
+    data_criacao: Mapped[datetime] = sa.Column(sa.DateTime, nullable=False, default=datetime.now)
+    data_atualizacao: Mapped[datetime] = sa.Column(sa.DateTime, default=datetime.now,
+                                                   nullable=False, onupdate=datetime.now)
 
     def __repr__(self):
         """Retorna uma representação do objeto em forma de 'string'."""
@@ -56,7 +60,6 @@ class Picole(ModelBase):
                         {', picole.sabor=' + self.sabor.nome if self.sabor else ''}                                     
                         )"""
                 )
-
 
     @staticmethod
     def insertPicole(preco: float, sabor_fk: int, tipo_embalagem_fk: int, tipo_picole_fk: int) -> 'Picole' or None:
@@ -109,11 +112,13 @@ class Picole(ModelBase):
             return picole
         except IntegrityError as e:
             if 'FOREIGN KEY constraint failed' in str(e):
-                raise RuntimeError(f"""Erro de integridade ao inserir Picole. Verifique se as FKs fornecidas existem: {sabor_fk=} | {tipo_embalagem_fk=} | {tipo_picole_fk=}"""
-                                   )
+                raise RuntimeError(
+                    f"""Erro de integridade ao inserir Picole. Verifique se as FKs fornecidas existem: {sabor_fk=} | {tipo_embalagem_fk=} | {tipo_picole_fk=}"""
+                    )
             elif 'UNIQUE constraint failed' in str(e):
-                raise RuntimeError(f"""Erro de integridade ao inserir Picole. Já existe um Picole com a mesma combinação de sabor_fk, tipo_picole_fk e tipo_embalagem_fk: {sabor_fk=} | {tipo_picole_fk=} | {tipo_embalagem_fk=}"""
-                                   )
+                raise RuntimeError(
+                    f"""Erro de integridade ao inserir Picole. Já existe um Picole com a mesma combinação de sabor_fk, tipo_picole_fk e tipo_embalagem_fk: {sabor_fk=} | {tipo_picole_fk=} | {tipo_embalagem_fk=}"""
+                    )
             else:
                 raise RuntimeError(f'Erro de integridade ao inserir Picole: {e}')
 
@@ -254,7 +259,6 @@ class Picole(ModelBase):
         except Exception as exc:
             print(f'Erro inesperado: {exc}')
 
-
     @staticmethod
     def updatePicole(id_picole: int, preco: Union[float, None], sabor_fk: [int, None],
                      tipo_embalagem_fk: Union[float, None], tipo_picole_fk: Union[float, None]) -> 'Picole':
@@ -323,11 +327,13 @@ class Picole(ModelBase):
 
         except IntegrityError as e:
             if 'FOREIGN KEY constraint failed' in str(e):
-                raise RuntimeError(f"""Erro de integridade ao inserir Picole. Verifique se as FKs fornecidas existem: {sabor_fk=} | {tipo_embalagem_fk=} | {tipo_picole_fk=}"""
-                                   )
+                raise RuntimeError(
+                    f"""Erro de integridade ao inserir Picole. Verifique se as FKs fornecidas existem: {sabor_fk=} | {tipo_embalagem_fk=} | {tipo_picole_fk=}"""
+                    )
             elif 'UNIQUE constraint failed' in str(e):
-                raise RuntimeError(f"""Erro de integridade ao inserir Picole. Já existe um Picole com a mesma combinação de sabor_fk, tipo_picole_fk e tipo_embalagem_fk: {sabor_fk=} | {tipo_picole_fk=} | {tipo_embalagem_fk=}"""
-                                   )
+                raise RuntimeError(
+                    f"""Erro de integridade ao inserir Picole. Já existe um Picole com a mesma combinação de sabor_fk, tipo_picole_fk e tipo_embalagem_fk: {sabor_fk=} | {tipo_picole_fk=} | {tipo_embalagem_fk=}"""
+                    )
             else:
                 raise RuntimeError(f'Erro de integridade ao inserir Picole: {e}')
 

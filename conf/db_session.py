@@ -99,6 +99,7 @@ def createTables(sqlite: bool = True) -> None:
     global __engine
     if __engine is None:
         __engine = createEngine(sqlite=sqlite)
+    import models.__all_models
 
     ModelBase.metadata.drop_all(__engine)
     ModelBase.metadata.create_all(__engine)
