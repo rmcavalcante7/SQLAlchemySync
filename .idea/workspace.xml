@@ -5,26 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5af0d140-9a4a-46b5-86f6-f30510b090fa" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/ScriptsAuxiliares/DataBaseFeatures.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Auxiliar.py" beforeDir="false" afterPath="$PROJECT_DIR$/ScriptsAuxiliares/Auxiliar.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/conf/db_session.py" beforeDir="false" afterPath="$PROJECT_DIR$/conf/db_session.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ScriptsAuxiliares/Auxiliar.py" beforeDir="false" afterPath="$PROJECT_DIR$/ScriptsAuxiliares/Auxiliar.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/db/picoles.sqlite" beforeDir="false" afterPath="$PROJECT_DIR$/db/picoles.sqlite" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/aditivo_nutritivo.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/aditivo_nutritivo.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/aditivo_nutritivo_picole.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/aditivo_nutritivo_picole.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/conservante.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/conservante.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/conservante_picole.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/conservante_picole.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/ingrediente.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/ingrediente.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/ingrediente_picole.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/ingrediente_picole.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/lote.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/lote.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/lote_nota_fiscal.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/lote_nota_fiscal.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/nota_fiscal.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/nota_fiscal.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/picole.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/picole.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/revendedor.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/revendedor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/sabor.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/sabor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/tipo_embalagem.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/tipo_embalagem.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/tipo_picole.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/tipo_picole.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/populate_main.py" beforeDir="false" afterPath="$PROJECT_DIR$/populate_main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/run_tests.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/run_tests.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -69,7 +53,7 @@
       <recent name="C:\Users\rafael.m.cavalcante\PycharmProjects\ProjetctSQLAlchemy\SQLAlchemySync\ScriptsAuxiliares" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.lote_nota_fiscal">
+  <component name="RunManager" selected="Python tests.Python tests in test_aditivo_nutritivo_picole.py">
     <configuration name="lote_nota_fiscal" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="SQLAlchemySync" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -133,55 +117,41 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="revendedor" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="Python tests in test_aditivo_nutritivo_picole.py" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
       <module name="SQLAlchemySync" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/models" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests/models" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/models/revendedor.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/tests/models/test_aditivo_nutritivo_picole.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
       <method v="2" />
     </configuration>
-    <configuration name="sabor" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="Python tests in test_aditivo_nutritivo.py" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
       <module name="SQLAlchemySync" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/models" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests/models" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/models/sabor.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/tests/models/test_aditivo_nutritivo.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
       <method v="2" />
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python tests.Python tests in test_aditivo_nutritivo_picole.py" />
+        <item itemvalue="Python tests.Python tests in test_aditivo_nutritivo.py" />
         <item itemvalue="Python.lote_nota_fiscal" />
         <item itemvalue="Python.nota_fiscal" />
         <item itemvalue="Python.picole" />
-        <item itemvalue="Python.revendedor" />
-        <item itemvalue="Python.sabor" />
       </list>
     </recent_temporary>
   </component>
@@ -248,6 +218,16 @@
           <url>file://$PROJECT_DIR$/models/lote.py</url>
           <line>254</line>
           <option name="timeStamp" value="33" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/tests/models/test_aditivo_nutritivo.py</url>
+          <line>72</line>
+          <option name="timeStamp" value="41" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/tests/models/test_aditivo_nutritivo_picole.py</url>
+          <line>66</line>
+          <option name="timeStamp" value="44" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

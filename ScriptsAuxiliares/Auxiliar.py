@@ -9,7 +9,7 @@ class Auxiliar:
         diretorio_atual = os.path.abspath(os.path.dirname(__file__))
 
         # Define o nome da pasta que você sabe que está presente no diretório raiz do projeto
-        pasta_referencia = 'venv'
+        pasta_referencia = '.root'
 
         # Itera sobre os diretórios pais até encontrar a pasta de referência
         while not os.path.exists(os.path.join(diretorio_atual, pasta_referencia)):

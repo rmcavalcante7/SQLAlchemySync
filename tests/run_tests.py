@@ -29,20 +29,20 @@ import pytest
 import os
 import sys
 
-# Adicione o diretório raiz do projeto ao caminho de pesquisa de módulos
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-
-import tests.conf.db_session
-
-# Execute os testes
-exit_code = pytest.main()
-
-# Verifique se todos os testes passaram
-if exit_code == pytest.ExitCode.OK:
-    # Se os testes passaram, importe e execute o outro módulo de teste
-    import tests.models.test_ingrediente_picole
-
-    # Execute testes de ingrediente_picole.py
-    pytest.main()
-else:
-    print("Alguns testes falharam. O módulo test_ingrediente_picole.py não será executado.")
+# # Adicione o diretório raiz do projeto ao caminho de pesquisa de módulos
+# sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+#
+# import tests.conf.db_session
+#
+# # Execute os testes
+# exit_code = pytest.main()
+#
+# # Verifique se todos os testes passaram
+# if exit_code == pytest.ExitCode.OK:
+#     # Se os testes passaram, importe e execute o outro módulo de teste
+#     import tests.models.test_ingrediente_picole
+#
+#     # Execute testes de ingrediente_picole.py
+#     pytest.main()
+# else:
+#     print("Alguns testes falharam. O módulo test_ingrediente_picole.py não será executado.")
