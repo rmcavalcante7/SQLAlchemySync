@@ -1,0 +1,9 @@
+[build-system]
+requires = [ "setuptools", "wheel",]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "meu_projeto"
+version = "0.1.0"
+requires-python = "==3.11"
+dependencies = [ "colorama==0.4.6", "greenlet==3.0.3", "iniconfig==2.0.0", "packaging==24.0", "pluggy==1.5.0", "psycopg2-binary==2.9.9", "pytest==8.2.0", "SQLAlchemy==1.4.31", "toml==0.10.2", "tqdm==4.66.2",]
